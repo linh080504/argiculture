@@ -9,11 +9,7 @@ class DrugLookupCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-<<<<<<< HEAD
       width: double.infinity, // Đảm bả o Card chiếm toàn bộ chiều rộng
-=======
-      width: double.infinity, // Đảm bảo Card chiếm toàn bộ chiều rộng
->>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
       padding: const EdgeInsets.all(16.0),
       child: Card(
         elevation: 4,
