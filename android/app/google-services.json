@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "1097120590111",
+    "project_id": "agriculture-f3479",
+    "storage_bucket": "agriculture-f3479.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1097120590111:android:db2976d271cde26f25682a",
+        "android_client_info": {
+          "package_name": "com.example.weather"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1097120590111-h56fptp3rsc7gib82iobotda1dgttev1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.weather",
+            "certificate_hash": "fb735d26e1a542e4c2a040c6f960ee9acb4b4faf"
+          }
+        },
+        {
+          "client_id": "1097120590111-pchuqoepvjikv328k58qobgft6eoaphh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwaBVZPVgUmNtvOGWeGAa3M2neuMqHNqk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1097120590111-pchuqoepvjikv328k58qobgft6eoaphh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1097120590111-cq9l8uu0pac4dd0j0hqthcrl8q8cj8bk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.weather"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
