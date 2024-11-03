@@ -51,6 +51,7 @@ dependencies:
   sqflite: ^2.3.3+1
   geolocator: ^13.0.1
   geocoding: ^3.0.0
+<<<<<<< HEAD
   responsive_framework: ^1.5.1
   responsive_builder: ^0.7.1
   flutter_admin_scaffold: ^1.3.0
@@ -62,6 +63,8 @@ dependencies:
   cached_network_image: ^3.4.1
 
 
+=======
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
 
 dev_dependencies:
   flutter_test:

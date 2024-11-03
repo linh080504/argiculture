@@ -3,12 +3,15 @@ import 'package:page_transition/page_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weather/Components/color.dart';
 import 'package:weather/UI/HomePage/home_page.dart';
+<<<<<<< HEAD
 import 'package:weather/UI/login.dart';
 import 'package:weather/UI/menu_home/faq.dart';
 import 'package:weather/UI/menu_home/introduce_app.dart';
 import 'package:weather/UI/menu_home/partners.dart';
 import 'package:weather/UI/menu_home/privacy_policy.dart';
 import 'package:weather/UI/menu_home/term_of_use.dart';
+=======
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
 import 'package:weather/UI/scan_page.dart';
 
 class Home extends StatefulWidget {
@@ -55,6 +58,7 @@ class _HomeState extends State<Home> {
     });
   }
 
+<<<<<<< HEAD
   // Hàm xử lý đăng xuất
   void _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -66,6 +70,8 @@ class _HomeState extends State<Home> {
     );
   }
 
+=======
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -148,6 +154,7 @@ class _HomeState extends State<Home> {
             ),
             ListTile(
               leading: Icon(Icons.home),
+<<<<<<< HEAD
               title: Text('Giới thiệu về mobiAgri'),
               onTap: () {
                 Navigator.push(
@@ -166,11 +173,19 @@ class _HomeState extends State<Home> {
                 );
                 setState(() {
                   _bottomNavIndex = 1; // Điều hướng về trang chủ
+=======
+              title: Text('Chính sách bảo mật'),
+              onTap: () {
+                Navigator.pop(context); // Đóng menu
+                setState(() {
+                  _bottomNavIndex = 0; // Điều hướng về trang chủ
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
                 });
               },
             ),
             ListTile(
               leading: Icon(Icons.favorite),
+<<<<<<< HEAD
               title: Text('Điều khoản sử dụng'),
               onTap: () {
                 Navigator.push(
@@ -179,6 +194,13 @@ class _HomeState extends State<Home> {
                 );
                 setState(() {
                   _bottomNavIndex = 2;
+=======
+              title: Text('Điều khoản sử dunjg'),
+              onTap: () {
+                Navigator.pop(context);
+                setState(() {
+                  _bottomNavIndex = 1;
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
                 });
               },
             ),
@@ -186,12 +208,18 @@ class _HomeState extends State<Home> {
               leading: Icon(Icons.person),
               title: Text('Câu hỏi thường gặp'),
               onTap: () {
+<<<<<<< HEAD
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => FAQ()),
                 );
                 setState(() {
                   _bottomNavIndex = 3;
+=======
+                Navigator.pop(context);
+                setState(() {
+                  _bottomNavIndex = 2;
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
                 });
               },
             ),
@@ -199,12 +227,18 @@ class _HomeState extends State<Home> {
               leading: Icon(Icons.account_circle),
               title: Text('Đối tác của chúng tôi'),
               onTap: () {
+<<<<<<< HEAD
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => Partners()),
                 );
                 setState(() {
                   _bottomNavIndex = 4;
+=======
+                Navigator.pop(context);
+                setState(() {
+                  _bottomNavIndex = 3;
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
                 });
               },
             ),
@@ -214,7 +248,11 @@ class _HomeState extends State<Home> {
               onTap: () {
                 Navigator.pop(context);
                 setState(() {
+<<<<<<< HEAD
                   _bottomNavIndex = 5;
+=======
+                  _bottomNavIndex = 4;
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
                 });
               },
             ),
@@ -224,7 +262,11 @@ class _HomeState extends State<Home> {
               onTap: () {
                 Navigator.pop(context);
                 setState(() {
+<<<<<<< HEAD
                   _bottomNavIndex = 6;
+=======
+                  _bottomNavIndex = 5;
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
                 });
               },
             ),
@@ -234,7 +276,11 @@ class _HomeState extends State<Home> {
               onTap: () {
                 Navigator.pop(context);
                 setState(() {
+<<<<<<< HEAD
                   _bottomNavIndex = 7;
+=======
+                  _bottomNavIndex = 6;
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
                 });
               },
             ),
@@ -242,8 +288,15 @@ class _HomeState extends State<Home> {
               leading: Icon(Icons.outlet_sharp),
               title: Text('Đăng xuất'),
               onTap: () {
+<<<<<<< HEAD
                 Navigator.pop(context); // Đóng menu
                 _logout(); // Gọi hàm đăng xuất
+=======
+                Navigator.pop(context);
+                setState(() {
+                  _bottomNavIndex = 7;
+                });
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
               },
             ),
           ],

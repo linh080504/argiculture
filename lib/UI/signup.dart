@@ -1,11 +1,17 @@
+<<<<<<< HEAD
 import 'package:cloud_firestore/cloud_firestore.dart';
+=======
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:weather/Components/color.dart';
+<<<<<<< HEAD
 import 'package:weather/Database/argiculture/user.dart';
+=======
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
 import 'package:weather/Database/firebase_auth_services.dart';
 import 'package:weather/Database/toast.dart';
 import 'package:weather/UI/custom_textfield.dart';
@@ -61,6 +67,7 @@ class _SignUpPageState extends State<SignUpPage> {
       );
     }
   }
+<<<<<<< HEAD
   // Thêm phương thức này vào lớp _SignUpPageState
   Future<void> addUserToFirestore(String email, String fullname, String password) async {
     try {
@@ -79,6 +86,9 @@ class _SignUpPageState extends State<SignUpPage> {
       print("Failed to add user to Firestore: $e");
     }
   }
+=======
+
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
   @override
   void dispose() {
     _emailController.dispose();
@@ -88,7 +98,10 @@ class _SignUpPageState extends State<SignUpPage> {
     super.dispose();
   }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
   void _signUp() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -97,6 +110,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
       String email = _emailController.text;
       String password = _passwordController.text;
+<<<<<<< HEAD
       String fullname = _usernameController.text;
       try {
         User? user = await _auth.signUpWithEmailAndPassword(email, password);
@@ -108,6 +122,17 @@ class _SignUpPageState extends State<SignUpPage> {
             isSigningUp = false;
           });
 
+=======
+
+      try {
+        User? user = await _auth.signUpWithEmailAndPassword(email, password);
+
+        setState(() {
+          isSigningUp = false;
+        });
+
+        if (user != null) {
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
           showToast(message: "User is successfully created");
           Navigator.pushReplacement(
             context,
@@ -313,7 +338,10 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf

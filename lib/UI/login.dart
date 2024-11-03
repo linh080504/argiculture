@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+<<<<<<< HEAD
 import 'package:weather/Amin/admin_page.dart';
+=======
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
 import 'package:weather/Components/color.dart';
 import 'package:weather/Database/firebase_auth_services.dart';
 import 'package:weather/UI/custom_textfield.dart';
@@ -34,10 +37,17 @@ class _SignInPageState extends State<SignInPage> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+<<<<<<< HEAD
       await _auth.signInWithCredential(credential);
       // Lưu tên người dùng vào SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true); // Lưu trạng thái đăng nhập
+=======
+
+      await _auth.signInWithCredential(credential);
+      // Lưu tên người dùng vào SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
       await prefs.setString('userName', googleUser.displayName ?? 'Người dùng'); // Lưu tên hoặc "Người dùng" nếu không có
 
 
@@ -75,11 +85,14 @@ class _SignInPageState extends State<SignInPage> {
         password: password,
       );
       user = userCredential.user;
+<<<<<<< HEAD
       // Lưu thông tin người dùng vào SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true); // Lưu trạng thái đăng nhập
       await prefs.setString('userName', user?.displayName ?? email); // Lưu tên người dùng hoặc email
 
+=======
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
     } on FirebaseAuthException catch (e) {
       if (e.code == "user-not-found") {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -173,6 +186,7 @@ class _SignInPageState extends State<SignInPage> {
                       );
 
                       if (user != null) {
+<<<<<<< HEAD
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         await prefs.setString('email', email); // Lưu địa chỉ email
                         // Kiểm tra email và mật khẩu
@@ -189,6 +203,12 @@ class _SignInPageState extends State<SignInPage> {
                             MaterialPageRoute(builder: (context) => const Home()),
                           );
                         }
+=======
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const Home()),
+                        );
+>>>>>>> d58dd9af06300eef7fc4b1075ef30612109c5ddf
                       }
                     }
                   },
