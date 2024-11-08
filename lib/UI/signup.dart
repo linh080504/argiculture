@@ -11,6 +11,7 @@ import 'package:weather/Database/toast.dart';
 import 'package:weather/UI/custom_textfield.dart';
 import 'package:weather/UI/home.dart';
 import 'package:weather/UI/login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -103,6 +104,8 @@ class _SignUpPageState extends State<SignUpPage> {
 
         if (user != null) {
           await addUserToFirestore(email, fullname, password);
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('fullname', fullname);
 
           setState(() {
             isSigningUp = false;

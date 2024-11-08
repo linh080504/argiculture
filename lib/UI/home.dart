@@ -10,6 +10,9 @@ import 'package:weather/UI/menu_home/partners.dart';
 import 'package:weather/UI/menu_home/privacy_policy.dart';
 import 'package:weather/UI/menu_home/term_of_use.dart';
 import 'package:weather/UI/scan_page.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:weather/UI/CommunityPage.dart';
+import 'package:weather/UI/ExpertPage.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -35,8 +38,8 @@ class _HomeState extends State<Home> {
   List<Widget> _widgetOptions() {
     return [
       HomePage(), // Tab Home
-      Container(color: Colors.green), // Tab Favorite
-      Container(color: Colors.blue), // Tab Cart
+      CommunityPage(),// Tab Favorite
+      ExpertPage(), // Tab Cart
       Container(color: Colors.orange), // Tab Profile
     ];
   }
@@ -50,11 +53,12 @@ class _HomeState extends State<Home> {
   // Hàm lấy tên tài khoản từ SharedPreferences
   void _loadUserName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? fullname = prefs.getString('fullname');
+    print('fullname: $fullname');
     setState(() {
-      userName = prefs.getString('userName') ?? 'Người dùng'; // Nếu không có tên tài khoản, hiển thị "Người dùng"
+      userName = fullname ?? 'Người dùng';
     });
   }
-
   // Hàm xử lý đăng xuất
   void _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -65,6 +69,7 @@ class _HomeState extends State<Home> {
           (Route<dynamic> route) => false, // Loại bỏ tất cả các trang trước đó
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -231,13 +236,13 @@ class _HomeState extends State<Home> {
             ListTile(
               leading: Icon(Icons.share),
               title: Text('Chia sẻ ứng dụng'),
-              onTap: () {
-                Navigator.pop(context);
-                setState(() {
-                  _bottomNavIndex = 7;
-                });
+              onTap: () async {
+                // Hiển thị danh sách các ứng dụng có thể chia sẻ
+                await Share.share('Bạn muốn chia sẻ ứng dụng nào?'
+                );
               },
             ),
+
             ListTile(
               leading: Icon(Icons.outlet_sharp),
               title: Text('Đăng xuất'),

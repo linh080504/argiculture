@@ -22,8 +22,10 @@ class _SignInPageState extends State<SignInPage> {
   final FirebaseAuthService _auth = FirebaseAuthService();
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _fullnameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>(); // Thêm khóa Form
+  String? selectedRole;
 
   Future<void> _signInWithGoogle() async {
     try {
@@ -78,8 +80,7 @@ class _SignInPageState extends State<SignInPage> {
       // Lưu thông tin người dùng vào SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true); // Lưu trạng thái đăng nhập
-      await prefs.setString('userName', user?.displayName ?? email); // Lưu tên người dùng hoặc email
-
+      await prefs.setString('userName', user?.displayName ?? email);
     } on FirebaseAuthException catch (e) {
       if (e.code == "user-not-found") {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -150,7 +151,9 @@ class _SignInPageState extends State<SignInPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 5),
+
+                const SizedBox(height: 15),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(size.width, 60),
