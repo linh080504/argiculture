@@ -13,6 +13,7 @@ import 'package:weather/UI/scan_page.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:weather/UI/CommunityPage.dart';
 import 'package:weather/UI/ExpertPage.dart';
+import 'package:weather/UI/ProfilePage.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -40,7 +41,7 @@ class _HomeState extends State<Home> {
       HomePage(), // Tab Home
       CommunityPage(),// Tab Favorite
       ExpertPage(), // Tab Cart
-      Container(color: Colors.orange), // Tab Profile
+     ProfilePage(), // Tab Profile
     ];
   }
   @override
@@ -69,7 +70,6 @@ class _HomeState extends State<Home> {
           (Route<dynamic> route) => false, // Loại bỏ tất cả các trang trước đó
     );
   }
-
 
   @override
   Widget build(BuildContext context) {

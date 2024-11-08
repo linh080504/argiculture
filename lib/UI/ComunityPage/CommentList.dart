@@ -20,6 +20,7 @@ class _CommentListState extends State<CommentList> {
   final TextEditingController _titlecmtController = TextEditingController();
   final commentController = Get.find<PostController>();
   String? userName;
+  String? postUser;
   String? postTitle;
   XFile? _imageFile;
   List<Map<String, dynamic>> comments = [];
@@ -56,6 +57,7 @@ class _CommentListState extends State<CommentList> {
       if (postSnapshot.exists) {
         setState(() {
           postTitle = postSnapshot['title'];
+          postUser = postSnapshot['user'];
         });
       }
     } catch (e) {
@@ -154,7 +156,7 @@ class _CommentListState extends State<CommentList> {
     );
     return Scaffold(
       appBar: AppBar(
-        title: Text('Post is by ${userName}'),
+        title: Text('Post is by ${postUser ?? "Unknown"}'),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -169,7 +171,7 @@ class _CommentListState extends State<CommentList> {
                   PostCard(
                     post: Post(
                       id: widget.postId,
-                      user: '',
+                      user: postUser ?? 'Unknown',
                       title: postTitle!,
                       images: [],
                       comments: [],
