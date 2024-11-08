@@ -48,7 +48,7 @@ class _DrugLookPageState extends State<DrugLookPage> {
         index: _bottomNavIndex,
         children: [
           // Nội dung cho tab "Thuốc được sử dụng"
-          buildAllowedDrugContent(), // Gọi hàm đã chuyển
+          AllowedDrugContent(), // Gọi hàm đã chuyển
           // Nội dung cho tab "Thuốc cấm sử dụng"
           _buildBannedDrugContent(),
         ],
