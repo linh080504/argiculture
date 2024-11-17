@@ -4,10 +4,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:weather/Components/color.dart';
-import 'package:weather/UI/HomePage/drug_look_page.dart';
-import 'package:weather/UI/HomePage/drug_lookup_card.dart';
+import 'package:weather/UI/DrugsPage/drug_look_page.dart';
+import 'package:weather/UI/DrugsPage/drug_lookup_card.dart';
 import 'package:weather/UI/HomePage/feature_card.dart';
 import 'package:weather/UI/HomePage/weather_detail_page.dart';
+import 'package:weather/UI/PlantPage/MyPlant.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -185,53 +186,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: EdgeInsets.all(16.0),
-      children: [
-        // Section hiển thị thời tiết
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
           children: [
-            GestureDetector(
-              onTap: () {
-                // Điều hướng đến trang chi tiết vị trí
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => WeatherDetailPage(
-                      location: location,
-                    ),
-                  ),
-                );
-              },
-              child: Row(
-                children: [
-                  Icon(Icons.location_city, color: blackColor),
-                  Text(
-                    location,
-                    style: TextStyle(fontSize: 20, color: blackColor),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: 8),
-            IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: fetchWeather,
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        // Row chứa chi tiết thời tiết và thẻ độ ẩm/chất lượng không khí
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Circular container for temperature and icon
-            Column(
+            // Section hiển thị thời tiết
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 GestureDetector(
                   onTap: () {
-                    // Điều hướng đến trang chi tiết nhiệt độ
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -241,163 +206,196 @@ class _HomePageState extends State<HomePage> {
                       ),
                     );
                   },
-                  child: Container(
-                    width: 150, // Set the width of the circle
-                    height: 150, // Set the height of the circle
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.blue[100], // Background color of the circle
+                  child: Row(
+                    children: [
+                      Icon(Icons.location_city, color: blackColor),
+                      Text(
+                        location,
+                        style: TextStyle(fontSize: 20, color: blackColor),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(Icons.refresh),
+                  onPressed: fetchWeather,
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Row chứa chi tiết thời tiết và thẻ độ ẩm/chất lượng không khí
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => WeatherDetailPage(
+                              location: location,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.blue[100],
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(weatherIcon, size: 30),
+                              Text(
+                                temperature,
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                    child: Center(
+                    const SizedBox(height: 10),
+                    Text(
+                      weatherStatus,
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    IntrinsicWidth(
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(weatherIcon, size: 30),
-                          Text(
-                            temperature,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                          // Thẻ cho Chất lượng không khí
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => WeatherDetailPage(
+                                    location: location,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  children: [
+                                    Text("Chỉ số chất lượng\n không khí:", style: TextStyle(fontSize: 16)),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.masks, color: Colors.blue),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          airQuality,
+                                          style: const TextStyle(
+                                            fontSize: 24,
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => WeatherDetailPage(
+                                    location: location,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  children: [
+                                    Text("Độ ẩm:", style: TextStyle(fontSize: 16)),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.water, color: Colors.blue),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          humidity,
+                                          style: const TextStyle(
+                                            fontSize: 24,
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ),
-                // Weather status below the circle
-                const SizedBox(height: 10),
-                Text(
-                  weatherStatus,
-                  style: const TextStyle(fontSize: 18),
+                  ],
                 ),
               ],
             ),
-            // Cột cho các thẻ Chất lượng không khí và Độ ẩm
-            Column(
-              children: [
-                IntrinsicWidth(
-                  child: Column(
-                    children: [
-                      // Thẻ cho Chất lượng không khí
-                      GestureDetector(
-                        onTap: () {
-                          // Điều hướng đến trang chi tiết nhiệt độ
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => WeatherDetailPage(
-                                location: location,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Card(
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                Text("Chỉ số chất lượng\n không khí:", style: TextStyle(fontSize: 16)),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.masks, color: Colors.blue),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      airQuality,
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      // Thẻ cho Độ ẩm
-                      GestureDetector(
-                        onTap: () {
-                          // Điều hướng đến trang chi tiết nhiệt độ
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => WeatherDetailPage(
-                                location: location,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Card(
-                          elevation: 4,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              children: [
-                                Text("Độ ẩm:", style: TextStyle(fontSize: 16)),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.water, color: Colors.blue),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      humidity,
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            SizedBox(height: 20),
+            const Text(
+              "Tính năng nổi bật",
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  FeatureCard(icon: Icons.local_florist, label: "Bác sĩ cây AI"),
+                  FeatureCard(icon: Icons.shield, label: "Bảo hiểm lượng mưa"),
+                  FeatureCard(icon: Icons.qr_code, label: "Truy xuất nguồn gốc"),
+                  FeatureCard(icon: Icons.directions_bus, label: "Chuyến xe nông dân"),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            const DrugLookupCard(),
+            const SizedBox(height: 20),
+            MyPlantsScreen(),
+            const SizedBox(height: 20),
           ],
         ),
-        SizedBox(height: 20),
-        // Phần Tính năng nổi bật
-        const Text(
-          "Tính năng nổi bật",
-          style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              FeatureCard(icon: Icons.local_florist, label: "Bác sĩ cây AI"),
-              FeatureCard(icon: Icons.shield, label: "Bảo hiểm lượng mưa"),
-              FeatureCard(icon: Icons.qr_code, label: "Truy xuất nguồn gốc"),
-              FeatureCard(icon: Icons.directions_bus, label: "Chuyến xe nông dân"),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        const DrugLookupCard(),
-
-        const SizedBox(height: 20),
-      ],
+      ),
     );
   }
+
 
 }
 

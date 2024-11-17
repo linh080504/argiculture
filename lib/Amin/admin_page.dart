@@ -7,11 +7,11 @@ import 'package:weather/Amin/disease_predicttion_page.dart';
 import 'package:weather/Components/color.dart';
 
 // Import các trang quản lý
-import 'drugs/drugs_management_page.dart'; // Đảm bảo import đúng đường dẫn
-import 'users_management_page.dart';  // Giả sử có trang quản lý người dùng
-import 'crops_management_page.dart';  // Giả sử có trang quản lý cây trồng
-import 'statistics_page.dart';         // Giả sử có trang thống kê
-import 'settings_page.dart';           // Giả sử có trang cài đặt
+import 'drugs/drugs_management_page.dart';
+import 'users_management_page.dart';
+import 'plants/crops_management_page.dart';
+import 'statistics_page.dart';
+import 'settings_page.dart';
 
 class AdminPage extends StatefulWidget {
   @override
@@ -20,47 +20,57 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   late Widget _currentBody;
-  String _selectedRoute = '/dashboard'; // Mục đang được chọn
+  String _selectedRoute = '/dashboard';
 
   @override
   void initState() {
     super.initState();
-    _currentBody = DashboardScreen(); // Khởi tạo body với Dashboard
+    _currentBody = DashboardScreen();
   }
 
   void _onMenuItemSelected(AdminMenuItem item) {
     setState(() {
-      _selectedRoute = item.route!; // Cập nhật route được chọn
+      _selectedRoute = item.route!;
       if (item.route == '/logout') {
         _logout(context);
       } else if (item.route == '/drugs') {
-        // Điều hướng đến DrugsManagementPage
-        _currentBody = DrugsManagementPage(); // Cập nhật body với trang quản lý thuốc
+        _currentBody = DrugsManagementPage();
       } else if (item.route == '/dashboard') {
-        // Điều hướng về Dashboard
-        _currentBody = DashboardScreen(); // Khôi phục lại Dashboard
+        _currentBody = DashboardScreen();
       } else if (item.route == '/users') {
-        _currentBody = UsersManagementPage(); // Cập nhật body với trang quản lý người dùng
+        _currentBody = UsersManagementPage();
       } else if (item.route == '/crops') {
-        _currentBody = CropsManagementPage(); // Cập nhật body với trang quản lý cây trồng
+        _currentBody = CropsManagementPage();
       } else if (item.route == '/disease-prediction') {
-        _currentBody = DiseasePredictionPage(); // Cập nhật body với trang dự đoán bệnh
+        _currentBody = DiseasePredictionPage();
       } else if (item.route == '/statistics') {
-        _currentBody = StatisticsPage(); // Cập nhật body với trang thống kê
+        _currentBody = StatisticsPage();
       } else if (item.route == '/settings') {
-        _currentBody = SettingsPage(); // Cập nhật body với trang cài đặt
+        _currentBody = SettingsPage();
       }
     });
   }
 
   Widget _buildMenuItem(String title, String route, IconData icon) {
     bool isSelected = _selectedRoute == route;
-    return ListTile(
-      title: Text(title, style: TextStyle(color: isSelected ? Colors.blue : Colors.grey)),
-      leading: Icon(icon, color: isSelected ? Colors.blue : Colors.grey),
-      onTap: () {
-        _onMenuItemSelected(AdminMenuItem(title: title, route: route, icon: icon));
-      },
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+      child: ListTile(
+        title: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? Colors.blueAccent : Colors.grey[700],
+            fontSize: 16,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        leading: Icon(icon, color: isSelected ? Colors.blueAccent : Colors.grey[700], size: 26),
+        tileColor: isSelected ? Colors.blue[50] : Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+        onTap: () {
+          _onMenuItemSelected(AdminMenuItem(title: title, route: route, icon: icon));
+        },
+      ),
     );
   }
 
@@ -68,8 +78,12 @@ class _AdminPageState extends State<AdminPage> {
   Widget build(BuildContext context) {
     return AdminScaffold(
       appBar: AppBar(
-        title: Text('MobiAgri - Dashboard'),
+        title: Text(
+          'MobiAgri - Dashboard',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: primaryColor,
+        elevation: 4.0, // Hiệu ứng bóng mờ nhẹ
       ),
       sideBar: SideBar(
         items: [
@@ -82,20 +96,41 @@ class _AdminPageState extends State<AdminPage> {
           AdminMenuItem(title: 'Cài đặt', route: '/settings', icon: Icons.settings),
           AdminMenuItem(title: 'Logout', route: '/logout', icon: Icons.logout),
         ],
-        backgroundColor: primaryColor.withOpacity(0.3),
-        selectedRoute: _selectedRoute, // Màu sắc mục được chọn
+        backgroundColor: primaryColor.withOpacity(0.2),
+        selectedRoute: _selectedRoute,
         onSelected: _onMenuItemSelected,
+        header: Container(
+          height: 80,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: primaryColor,
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
+          ),
+          child: Text(
+            'Admin Menu',
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
+          ),
+        ),
       ),
-      body: _currentBody, // Hiển thị body hiện tại
+      body: Container(
+        color: Colors.grey[100],
+        padding: EdgeInsets.all(16.0),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            color: Colors.white,
+            padding: EdgeInsets.all(16.0),
+            child: _currentBody,
+          ),
+        ),
+      ),
     );
   }
 
   Future<void> _logout(BuildContext context) async {
-    // Xóa thông tin đăng nhập
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Xóa tất cả dữ liệu
+    await prefs.clear();
 
-    // Điều hướng về trang đăng nhập
     Navigator.pushNamedAndRemoveUntil(context, '/signin', (route) => false);
   }
 }

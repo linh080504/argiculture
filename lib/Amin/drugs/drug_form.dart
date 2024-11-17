@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data'; // Thêm import cho Uint8List
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,8 +26,8 @@ class _DrugFormState extends State<DrugForm> {
   final TextEditingController _warningsController = TextEditingController();
   final TextEditingController _safetyRecommendationsController = TextEditingController();
 
-  File? _selectedImage; // Lưu ảnh dưới dạng File cho ứng dụng di động
-  Uint8List? _webImageBytes; // Lưu ảnh dưới dạng Uint8List cho nền tảng web
+  File? _selectedImage;
+  Uint8List? _webImageBytes;
   String? _imageUrl;
 
   @override
@@ -59,39 +59,31 @@ class _DrugFormState extends State<DrugForm> {
 
   Future<void> _pickImage() async {
     if (kIsWeb) {
-      // Xử lý cho nền tảng web
       try {
         FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.image);
         if (result != null && result.files.isNotEmpty) {
-          _webImageBytes = result.files.first.bytes; // Lưu ảnh dưới dạng Uint8List
+          _webImageBytes = result.files.first.bytes;
           final fileName = result.files.first.name;
 
           if (_webImageBytes != null) {
             setState(() {
               _imageUrl = null;
             });
-
-            // Upload ảnh lên Firestore
             _imageUrl = await _drugService.uploadImage(_webImageBytes!, fileName);
             if (_imageUrl!.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Có lỗi xảy ra khi tải lên ảnh.')));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra khi tải lên ảnh.')));
             }
             setState(() {});
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Không có ảnh nào được chọn.')));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Không có ảnh nào được chọn.')));
           }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Không có ảnh nào được chọn.')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Không có ảnh nào được chọn.')));
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Có lỗi xảy ra khi chọn ảnh: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra khi chọn ảnh: $e')));
       }
     } else {
-      // Xử lý cho app di động
       try {
         final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
         if (pickedFile != null) {
@@ -99,21 +91,17 @@ class _DrugFormState extends State<DrugForm> {
             _selectedImage = File(pickedFile.path);
           });
 
-          // Đọc byte từ ảnh và tải lên Firestore
           final bytes = await pickedFile.readAsBytes();
           _imageUrl = await _drugService.uploadImage(bytes, pickedFile.name);
           if (_imageUrl!.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Có lỗi xảy ra khi tải lên ảnh.')));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra khi tải lên ảnh.')));
           }
           setState(() {});
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Không có ảnh nào được chọn.')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Không có ảnh nào được chọn.')));
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Có lỗi xảy ra khi chọn ảnh: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra khi chọn ảnh: $e')));
       }
     }
   }
@@ -157,18 +145,20 @@ class _DrugFormState extends State<DrugForm> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(15),
       ),
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.drugId == null ? 'Thêm thuốc mới' : 'Cập nhật thuốc',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Center(
+              child: Text(
+                widget.drugId == null ? 'Thêm thuốc mới' : 'Cập nhật thuốc',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+              ),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 20),
             _buildTextField(_nameController, 'Tên thuốc'),
             _buildTextField(_companyController, 'Công ty'),
             _buildTextField(_typeController, 'Loại thuốc'),
@@ -178,35 +168,41 @@ class _DrugFormState extends State<DrugForm> {
             _buildTextField(_usageController, 'Công dụng'),
             _buildTextField(_warningsController, 'Cảnh báo'),
             _buildTextField(_safetyRecommendationsController, 'Khuyến nghị an toàn'),
-            SizedBox(height: 16),
-            if (_webImageBytes != null) ...[ // Nếu đang chạy trên web và có ảnh dưới dạng Uint8List
+            SizedBox(height: 20),
+            if (_webImageBytes != null)
               Image.memory(_webImageBytes!, height: 150, fit: BoxFit.cover),
-            ] else if (_selectedImage != null) ...[ // Nếu có ảnh đã chọn cho app
-              Text(
-                _selectedImage!.path.split('/').last,
-                style: TextStyle(color: Colors.blue),
-              ),
+            if (_selectedImage != null)
               Image.file(_selectedImage!, height: 150, fit: BoxFit.cover),
-            ] else if (_imageUrl != null && _imageUrl!.isNotEmpty) ...[ // Nếu có URL ảnh
-              SizedBox(height: 8),
+            if (_imageUrl != null && _imageUrl!.isNotEmpty)
               Image.network(_imageUrl!, height: 150, fit: BoxFit.cover),
-            ] else ...[ // Hiển thị nút chọn ảnh nếu không có ảnh nào
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 12.0),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(8.0),
+            SizedBox(height: 20),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: _pickImage,
+                icon: Icon(Icons.image, color: Colors.white),
+                label: Text('Chọn ảnh', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 20.0),
+                  backgroundColor: Colors.blueAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Center(child: Text('Chọn ảnh', style: TextStyle(color: Colors.blue))),
                 ),
               ),
-            ],
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _submitForm,
-              child: Text(widget.drugId == null ? 'Thêm' : 'Cập nhật'),
+            ),
+            SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: _submitForm,
+                child: Text(widget.drugId == null ? 'Thêm' : 'Cập nhật'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 14.0, horizontal: 40.0),
+                  backgroundColor: Colors.blueAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -216,14 +212,17 @@ class _DrugFormState extends State<DrugForm> {
 
   Widget _buildTextField(TextEditingController controller, String label) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: TextStyle(color: Colors.blueAccent),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide(color: Colors.grey),
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.blueAccent),
           ),
         ),
       ),

@@ -1,14 +1,15 @@
-import 'package:get/get.dart';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class PostController extends GetxController {
   var title = ''.obs;
   var selectedImages = <XFile>[].obs;
   var posts = <Post>[].obs;
   final comments = <Comment>[].obs;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Future<void> fetchPosts() async {
     try {
@@ -46,45 +47,62 @@ class PostController extends GetxController {
     }
   }
 
-  Future<void> addPost(String userName) async {
+  Future<void> addPost(String userName, {List<XFile>? images}) async {
     try {
+      // Tạo một ID duy nhất cho post mới
       String postId = FirebaseFirestore.instance.collection('posts').doc().id;
       List<String> imageUrls = [];
 
+      // Kiểm tra nếu có hình ảnh trong `selectedImages`
       for (XFile image in selectedImages) {
-        File imageFile = File(image.path);
-        String fileName = '$postId-${image.name}';
-        UploadTask uploadTask = FirebaseStorage.instance.ref('post_images/$fileName').putFile(imageFile);
+        try {
+          File imageFile = File(image.path);
+          String fileName = '$postId-${image.name}';
 
-        TaskSnapshot snapshot = await uploadTask;
-        String downloadUrl = await snapshot.ref.getDownloadURL();
-        imageUrls.add(downloadUrl);
+          // Tạo một tham chiếu đến vị trí lưu trữ ảnh
+          final ref = _storage.ref().child('posts/$fileName');
 
-        print("Image uploaded: $downloadUrl");
+          // Dùng `putFile` để tải ảnh lên Firebase Storage
+          UploadTask uploadTask = ref.putFile(imageFile);
+
+          // Chờ upload hoàn tất
+          TaskSnapshot snapshot = await uploadTask;
+          if (snapshot.state == TaskState.success) {
+            // Lấy URL của ảnh
+            String downloadUrl = await snapshot.ref.getDownloadURL();
+            imageUrls.add(downloadUrl);
+            print("Image uploaded: $downloadUrl");
+          } else {
+            print("Failed to upload image: ${snapshot.state}");
+          }
+        } catch (uploadError) {
+          print("Error uploading image: $uploadError");
+        }
       }
 
-      // Save post data to Firestore
+      // Lưu dữ liệu bài viết với URLs của ảnh vào Firestore
       await FirebaseFirestore.instance.collection('posts').doc(postId).set({
         'user': userName,
         'title': title.value,
         'postId': postId,
         'timestamp': FieldValue.serverTimestamp(),
-        'images': imageUrls,
-
+        'images': imageUrls, // Lưu URLs của ảnh
       });
 
+      // Reset sau khi thêm post
       title.value = '';
       selectedImages.clear();
       print("Post added successfully!");
-      fetchPosts();
+
+      fetchPosts(); // Reload danh sách posts
     } catch (e) {
       print("Error adding post: $e");
     }
   }
 
+
   Future<void> fetchComments(String postId) async {
     try {
-      // Lấy dữ liệu bình luận từ Firestore
       QuerySnapshot commentSnapshot = await FirebaseFirestore.instance
           .collection('posts')
           .doc(postId)
@@ -101,7 +119,6 @@ class PostController extends GetxController {
       print("Error fetching comments: $e");
     }
   }
-
 
   Future<void> addComment(String postId, String userName, String commentText) async {
     try {
@@ -122,7 +139,6 @@ class PostController extends GetxController {
       print("Error adding comment: $e");
     }
   }
-
 }
 
 class Post {
@@ -162,10 +178,11 @@ class Post {
     data['user'] = this.user;
     data['timestamp'] = Timestamp.fromDate(timestamp);
     data['images'] = this.images;
-    data['comments'] = this.comments.map((comment) => comment.toJson()).toList();// Convert comments
+    data['comments'] = this.comments.map((comment) => comment.toJson()).toList();
     return data;
   }
 }
+
 class Comment {
   final String user;
   final String comment;

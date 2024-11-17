@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weather/UI/ComunityPage/postCreat.dart';
 import 'package:get/get.dart';
 import 'package:weather/UI/ComunityPage/postCard.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:weather/UI/ComunityPage/PostController.dart';
 
 class CommunityPage extends StatefulWidget {
@@ -26,31 +25,45 @@ class _CommunityPageState extends State<CommunityPage> {
     _postController.fetchPosts();
   }
 
-  // Hàm lấy tên tài khoản từ SharedPreferences
   void _loadUserName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      userName = prefs.getString('userName') ?? 'Người dùng'; // Nếu không có tên tài khoản, hiển thị "Người dùng"
+      userName = prefs.getString('userName') ?? 'Người dùng';
     });
   }
+
   void handlePostAdded(Post newPost) {
     _postController.posts.insert(0, newPost);
   }
 
-
   @override
   Widget build(BuildContext context) {
-
-    final newPostButton = Padding(
-      padding: const EdgeInsets.all(10),
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          elevation: 4,
-          side: BorderSide(
-              color: Colors.black, // Màu viền
-              width: 1),
-          backgroundColor: Colors.white,
+    return Scaffold(
+      key: _scaffoldKey,
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green, Colors.lightGreen],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
         ),
+        elevation: 4,
+        title: const Text(
+          'Cộng đồng mobiAgri',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Colors.green,
         onPressed: () async {
           Navigator.push(
             context,
@@ -59,59 +72,44 @@ class _CommunityPageState extends State<CommunityPage> {
             ),
           );
         },
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.edit,
-              color: Colors.black,
-            ),
-            SizedBox(width: 8),
-            Text(
-              'Tạo bài viết mới',
-              style: TextStyle(color: Colors.black),
-            ),
-            Spacer(),
-            Icon(
-              Icons.add_a_photo_outlined,
-              color : Colors.black,
-            ),
-            SizedBox(width: 2),
-          ],
+        label: const Text(
+          'Tạo bài viết',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-      ),
-    );
-
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: const Center(
-          child: Text(
-            'Cộng đồng mobiAgri',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.w500,
-              fontSize: 28,
-            ),
-          ),
-        ),
+        icon: const Icon(Icons.edit, color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            newPostButton,
-            SizedBox(height: 7),
             Expanded(
               child: Obx(() {
                 if (_postController.posts.isEmpty) {
-                  return Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(
+                          color: Colors.green,
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Đang tải bài viết...',
+                          style: TextStyle(color: Colors.grey, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  );
                 } else {
                   return ListView.builder(
+                    physics: const BouncingScrollPhysics(),
                     itemCount: _postController.posts.length,
                     itemBuilder: (context, index) {
                       final post = _postController.posts[index];
-                      return PostCard(post: post);
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: PostCard(post: post),
+                      );
                     },
                   );
                 }
@@ -123,4 +121,3 @@ class _CommunityPageState extends State<CommunityPage> {
     );
   }
 }
-

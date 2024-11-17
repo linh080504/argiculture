@@ -40,6 +40,7 @@ class MyApp extends StatelessWidget {
 
       routes: {
         '/signin': (context) => const SignInPage(), // Đăng ký route cho SignInPage
+
         // Bạn có thể thêm các route khác ở đây
       },
       home: ResponsiveBuilder(

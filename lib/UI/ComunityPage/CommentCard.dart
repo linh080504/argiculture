@@ -10,35 +10,64 @@ class CommentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 3, // Thêm hiệu ứng đổ bóng nhẹ cho card
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10), // Góc bo tròn cho card
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(12.0), // Thêm padding cho card
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(comment.user),
-                Text(
-                  DateFormat('dd/MM/yyyy HH:mm').format(comment.timestamp),
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                Text(comment.comment),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.thumb_up),
-                      onPressed: () {
-                      },
+            CircleAvatar(
+              radius: 25, // Đặt kích thước cho avatar
+              backgroundColor: Colors.blue, // Màu nền cho avatar
+              child: Text(
+                comment.user[0], // Lấy chữ cái đầu tiên của tên người dùng
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+            ),
+            const SizedBox(width: 10), // Khoảng cách giữa avatar và nội dung
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    comment.user,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
-                    IconButton(
-                      icon: Icon(Icons.comment),
-                      onPressed: () {
-                      },
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    DateFormat('dd/MM/yyyy HH:mm').format(comment.timestamp),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    comment.comment,
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.thumb_up, color: Colors.blue),
+                        onPressed: () {
+                          // Logic cho like button
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.comment, color: Colors.blue),
+                        onPressed: () {
+                          // Logic cho reply button
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),

@@ -24,22 +24,12 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
   }
 
   Future<void> _getAuthUsers() async {
-    try {
-      // Lấy danh sách người dùng từ Firebase Authentication
-      final List<UserRecord> users = [];
-      final userList = await _auth.fetchSignInMethodsForEmail(''); // Phương thức này không có tác dụng trong trường hợp này
-      setState(() {
-        _authUsers = users; // Lưu danh sách người dùng
-      });
-    } catch (e) {
-      print('Lỗi khi lấy danh sách người dùng từ Authentication: $e');
-    }
+    // Authentication users handling logic if applicable
   }
 
   Future<void> _getFirestoreUsers() async {
     List<UserRecord> users = [];
     try {
-      // Lấy danh sách người dùng từ Firestore
       final userCollection = await FirebaseFirestore.instance.collection('users').get();
       for (var doc in userCollection.docs) {
         users.add(UserRecord(
@@ -49,10 +39,10 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
         ));
       }
       setState(() {
-        _firestoreUsers = users; // Lưu danh sách người dùng từ Firestore
+        _firestoreUsers = users;
       });
     } catch (e) {
-      print('Lỗi khi lấy danh sách người dùng: $e');
+      print('Error fetching users: $e');
     }
   }
 
@@ -60,10 +50,11 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quản lý người dùng'),
+        title: const Text('Quản lý người dùng', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blueAccent,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, color: Colors.white),
             onPressed: () {
               showSearch(
                 context: context,
@@ -79,31 +70,37 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
         itemCount: _firestoreUsers.length,
         itemBuilder: (context, index) {
           final user = _firestoreUsers[index];
-          return ListTile(
-            title: Text(user.email),
-            subtitle: Text('Tên đầy đủ: ${user.fullname}'),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    _editUser(user);
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    _deleteUser(user);
-                  },
-                ),
-              ],
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: ListTile(
+              title: Text(user.email, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text('Tên đầy đủ: ${user.fullname}'),
+              trailing: Wrap(
+                spacing: 8,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () {
+                      _editUser(user);
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      _deleteUser(user);
+                    },
+                  ),
+                ],
+              ),
             ),
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addUser,
+        backgroundColor: Colors.blueAccent,
         child: const Icon(Icons.add),
       ),
     );
@@ -122,25 +119,11 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                onChanged: (value) {
-                  email = value;
-                },
-                decoration: const InputDecoration(labelText: 'Email'),
-              ),
-              TextField(
-                onChanged: (value) {
-                  fullname = value;
-                },
-                decoration: const InputDecoration(labelText: 'Tên đầy đủ'),
-              ),
-              TextField(
-                onChanged: (value) {
-                  password = value;
-                },
-                decoration: const InputDecoration(labelText: 'Mật khẩu'),
-                obscureText: true,
-              ),
+              _buildTextField('Email', onChanged: (value) => email = value),
+              const SizedBox(height: 10),
+              _buildTextField('Tên đầy đủ', onChanged: (value) => fullname = value),
+              const SizedBox(height: 10),
+              _buildTextField('Mật khẩu', obscureText: true, onChanged: (value) => password = value),
             ],
           ),
           actions: [
@@ -151,14 +134,12 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
                     email: email,
                     password: password,
                   );
-
                   await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
                     'email': email,
                     'fullname': fullname,
                   });
-
                   Navigator.of(context).pop();
-                  _getFirestoreUsers(); // Cập nhật danh sách người dùng
+                  _getFirestoreUsers();
                 } catch (e) {
                   print('Lỗi khi thêm người dùng: $e');
                 }
@@ -189,20 +170,9 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                onChanged: (value) {
-                  email = value;
-                },
-                controller: TextEditingController(text: user.email),
-                decoration: const InputDecoration(labelText: 'Email'),
-              ),
-              TextField(
-                onChanged: (value) {
-                  fullname = value;
-                },
-                controller: TextEditingController(text: user.fullname),
-                decoration: const InputDecoration(labelText: 'Tên đầy đủ'),
-              ),
+              _buildTextField('Email', initialValue: user.email, onChanged: (value) => email = value),
+              const SizedBox(height: 10),
+              _buildTextField('Tên đầy đủ', initialValue: user.fullname, onChanged: (value) => fullname = value),
             ],
           ),
           actions: [
@@ -213,9 +183,8 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
                     'email': email,
                     'fullname': fullname,
                   });
-
                   Navigator.of(context).pop();
-                  _getFirestoreUsers(); // Cập nhật danh sách người dùng
+                  _getFirestoreUsers();
                 } catch (e) {
                   print('Lỗi khi chỉnh sửa người dùng: $e');
                 }
@@ -237,8 +206,8 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
   Future<void> _deleteUser(UserRecord user) async {
     try {
       await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
-      await _auth.currentUser!.delete(); // Xóa người dùng từ Firebase Authentication
-      _getFirestoreUsers(); // Cập nhật danh sách người dùng
+      await _auth.currentUser!.delete();
+      _getFirestoreUsers();
     } catch (e) {
       print('Lỗi khi xóa người dùng: $e');
     }
@@ -248,6 +217,20 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
     setState(() {
       _searchQuery = query;
     });
+  }
+
+  Widget _buildTextField(String label,
+      {String? initialValue, bool obscureText = false, required ValueChanged<String> onChanged}) {
+    return TextField(
+      onChanged: onChanged,
+      obscureText: obscureText,
+      controller: initialValue != null ? TextEditingController(text: initialValue) : null,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      ),
+    );
   }
 }
 

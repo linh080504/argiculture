@@ -13,142 +13,170 @@ class PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        elevation: 4,
-        color: Colors.lightGreen,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Obx(
-                () => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      ' ${Get.find<PostController>().posts.firstWhere((p) => p.id == post.id).user}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      '  ${Get.find<PostController>().posts.firstWhere((p) => p.id == post.id).timestamp.toLocal()}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white38,
-                      ),
-                    ),
-                    SizedBox(height: 1),
-                    Text(
-                      '  ${Get.find<PostController>().posts.firstWhere((p) => p.id == post.id).title}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 7),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () {},
-                          icon: Icon(
-                            Icons.favorite_border,
-                            color: Colors.white,
-                          ),
-                          label: Text(
-                            'Like',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(23),
-                              side: BorderSide(
-                                  color: Colors.white, // Màu viền
-                                  width: 1),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            elevation: 5,
-                          ),
+      margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+      elevation: 8,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(18.0),
+            child: Obx(
+                  () => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Hàng với ảnh đại diện và tên người dùng
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: NetworkImage(
+                          'https://via.placeholder.com/150', // Placeholder cho ảnh đại diện
                         ),
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    CommentList(postId: post.id),
+                        radius: 20,
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        Get.find<PostController>().posts
+                            .firstWhere((p) => p.id == post.id)
+                            .user,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 6),
+                  // Thời gian đăng bài
+                  Text(
+                    '${Get.find<PostController>().posts.firstWhere((p) => p.id == post.id).timestamp.toLocal()}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  // Tiêu đề bài viết
+                  Text(
+                    Get.find<PostController>().posts
+                        .firstWhere((p) => p.id == post.id)
+                        .title,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  // Hiển thị hình ảnh nếu có
+                  if (post.images.isNotEmpty) ...[
+                    SizedBox(
+                      height: 200,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: post.images.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                post.images[index],
+                                fit: BoxFit.cover,
+                                width: 200,
+                                height: 200,
                               ),
-                            );
-                          },
-                          icon: Icon(
-                            Icons.comment,
-                            color: Colors.white,
-                          ),
-                          label: Text(
-                            'CMT',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(23),
-                              side: BorderSide(color: Colors.white, width: 1),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            elevation: 5,
-                          ),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            await Share.share('Bạn muốn chia sẻ đến ai?'
-                            );
-                          },
-                          icon: Icon(
-                            Icons.share,
-                            color: Colors.white,
-                          ),
-                          label: Text(
-                            'Share',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(23),
-                              side: BorderSide(
-                                  color: Colors.white, // Màu viền
-                                  width: 1),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            elevation: 5,
-                          ),
-                        ),
-                      ],
+                          );
+                        },
+                      ),
                     ),
+                    SizedBox(height: 12),
                   ],
-                ),
+                  // Đường kẻ ngang
+                  Divider(color: Colors.grey.shade300, thickness: 1),
+                  // Các nút hành động
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {},
+                        icon: Icon(Icons.favorite, color: Colors.redAccent),
+                        label: Text(
+                          'Thích',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.redAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          elevation: 0,
+                          side: BorderSide(color: Colors.redAccent),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  CommentList(postId: post.id),
+                            ),
+                          );
+                        },
+                        icon: Icon(Icons.comment, color: Colors.blueAccent),
+                        label: Text(
+                          'Bình luận',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.blueAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          elevation: 0,
+                          side: BorderSide(color: Colors.blueAccent),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          await Share.share('Bạn muốn chia sẻ đến ai?');
+                        },
+                        icon: Icon(Icons.share, color: Colors.greenAccent),
+                        label: Text(
+                          'Chia sẻ',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.greenAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          elevation: 0,
+                          side: BorderSide(color: Colors.greenAccent),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ],
-        ));
+          ),
+        ],
+      ),
+    );
   }
 }

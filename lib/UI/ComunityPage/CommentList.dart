@@ -31,18 +31,15 @@ class _CommentListState extends State<CommentList> {
     _loadUserName();
     _fetchPostDetails();
     commentController.fetchComments(widget.postId);
-    setState(() {});
   }
 
   Future<void> pickImage() async {
     final imagePicker = ImagePicker();
-    final pickedImageFile =
-        await imagePicker.pickImage(source: ImageSource.gallery);
+    final pickedImageFile = await imagePicker.pickImage(source: ImageSource.gallery);
 
     setState(() {
       if (pickedImageFile != null) {
         _imageFile = pickedImageFile;
-        print(_imageFile!.path);
       }
     });
   }
@@ -68,7 +65,6 @@ class _CommentListState extends State<CommentList> {
   void _loadUserName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? fullname = prefs.getString('fullname');
-    print('fullname: $fullname');
     setState(() {
       userName = fullname ?? 'Người dùng';
     });
@@ -76,42 +72,37 @@ class _CommentListState extends State<CommentList> {
 
   @override
   Widget build(BuildContext context) {
-    final titcmtleField = TextField(
+    final commentInputField = TextField(
       controller: _titlecmtController,
       decoration: InputDecoration(
-        fillColor: Colors.white,
+        fillColor: Colors.grey.shade100,
         filled: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide.none,
         ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        hintText: 'Enter a title',
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        hintText: 'Nhập bình luận...',
         suffixIcon: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: Icon(Icons.clear),
+              icon: Icon(Icons.clear, color: Colors.grey),
               onPressed: () {
                 _titlecmtController.clear();
-                ;
               },
             ),
-            SizedBox(width: 2),
             IconButton(
-              icon: Icon(Icons.add_a_photo),
-              onPressed: () {
-                pickImage;
-              },
+              icon: Icon(Icons.add_a_photo, color: Colors.blue),
+              onPressed: pickImage,
             ),
-            SizedBox(width: 2),
             IconButton(
-              icon: Icon(Icons.arrow_circle_right_outlined),
+              icon: Icon(Icons.send, color: Colors.green),
               onPressed: () async {
                 final commentText = _titlecmtController.text.trim();
                 if (commentText.isEmpty) {
-                  // Handle empty comment case
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a comment.')),
+                    const SnackBar(content: Text('Vui lòng nhập bình luận.')),
                   );
                   return;
                 }
@@ -120,24 +111,20 @@ class _CommentListState extends State<CommentList> {
                       widget.postId, userName!, commentText);
                   _titlecmtController.clear();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Comment added successfully!')),
+                    const SnackBar(content: Text('Đã thêm bình luận thành công!')),
                   );
                   commentController.fetchComments(widget.postId);
                 } catch (e) {
-                  print('Error adding comment: $e');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Row(
                         children: [
-                          Icon(Icons.warning_amber_rounded,
-                              color: Colors.white),
+                          Icon(Icons.warning, color: Colors.white),
                           SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              "Lỗi vui lòng comment lại",
-                              style: TextStyle(
-                                  color: Colors.white),
+                              "Lỗi khi thêm bình luận, vui lòng thử lại.",
+                              style: TextStyle(color: Colors.white),
                             ),
                           ),
                         ],
@@ -151,55 +138,67 @@ class _CommentListState extends State<CommentList> {
           ],
         ),
       ),
-      style: TextStyle(
-          color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+      style: TextStyle(color: Colors.black87, fontSize: 16),
     );
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Post is by ${postUser ?? "Unknown"}'),
+        backgroundColor: Colors.blueAccent,
+        title: Text('Bài viết của ${postUser ?? "Không rõ"}'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: postTitle != null
           ? SingleChildScrollView(
-              child: Column(
-                children: [
-                  PostCard(
-                    post: Post(
-                      id: widget.postId,
-                      user: postUser ?? 'Unknown',
-                      title: postTitle!,
-                      images: [],
-                      comments: [],
-                      timestamp: DateTime.now(),
-                    ),
-                  ),
-                  const Divider(thickness: 1),
-                  Container(
-                  padding: const EdgeInsets.all(10),
-                    child: Text(
-                      'Danh sách bình luận',
-                      style: TextStyle(fontSize: 20),
-                    ),
-                  ),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: commentController.comments.length,
-                    itemBuilder: (context, index) {
-                      final comment = commentController.comments[index];
-                      return CommentCard(comment: comment);
-                    },
-                  ),
-                  titcmtleField,
-                ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thẻ bài viết
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: PostCard(
+                post: Post(
+                  id: widget.postId,
+                  user: postUser ?? 'Không rõ',
+                  title: postTitle!,
+                  images: [],
+                  comments: [],
+                  timestamp: DateTime.now(),
+                ),
               ),
-            )
-          : Container(),
+            ),
+            const Divider(thickness: 1),
+            // Tiêu đề danh sách bình luận
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Text(
+                'Bình luận:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            // Danh sách bình luận
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: commentController.comments.length,
+              itemBuilder: (context, index) {
+                final comment = commentController.comments[index];
+                return CommentCard(comment: comment);
+              },
+            ),
+            // Ô nhập bình luận
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: commentInputField,
+            ),
+          ],
+        ),
+      )
+          : Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }

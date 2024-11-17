@@ -97,17 +97,26 @@ class _AllowedDrugContentState extends State<AllowedDrugContent> {
                                 children: [
                                   Expanded(
                                     child: Card(
-                                      elevation: 4,
-                                      color: Colors.green.withOpacity(0.4),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Row(
+                                      elevation: 6,
+                                      color: Colors.green.shade50,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            const Icon(Icons.eco, size: 40, color: Colors.green),
-                                            const SizedBox(width: 10),
-                                            const Text(
+                                           Icon(Icons.eco, size: 40, color: Colors.green),
+                                            SizedBox(height: 8),
+                                            Text(
                                               'Cây trồng',
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green,
+                                              ),
+                                              textAlign: TextAlign.center,
                                             ),
                                           ],
                                         ),
@@ -117,17 +126,26 @@ class _AllowedDrugContentState extends State<AllowedDrugContent> {
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Card(
-                                      elevation: 4,
-                                      color: Colors.blueAccent.withOpacity(0.4),
+                                      elevation: 6,
+                                      color: Colors.blue.shade50,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
                                       child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Row(
+                                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             const Icon(Icons.bug_report, size: 40, color: Colors.blue),
-                                            const SizedBox(width: 10),
+                                            const SizedBox(height: 8),
                                             const Text(
                                               'Dịch hại',
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.blue,
+                                              ),
+                                              textAlign: TextAlign.center,
                                             ),
                                           ],
                                         ),
@@ -135,7 +153,8 @@ class _AllowedDrugContentState extends State<AllowedDrugContent> {
                                     ),
                                   ),
                                 ],
-                              ),
+                              )
+
                             ],
                           ),
                         ),
