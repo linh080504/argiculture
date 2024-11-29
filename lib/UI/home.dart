@@ -14,6 +14,10 @@ import 'package:share_plus/share_plus.dart';
 import 'package:weather/UI/CommunityPage.dart';
 import 'package:weather/UI/ExpertPage.dart';
 import 'package:weather/UI/ProfilePage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -25,6 +29,8 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int _bottomNavIndex = 0; // Chỉ số của tab hiện tại
   String? userName;
+  File? _avatarImage;
+  String? userProfilePicture;
   List<IconData> iconList = [
     Icons.home,
     Icons.favorite,
@@ -44,6 +50,9 @@ class _HomeState extends State<Home> {
      ProfilePage(), // Tab Profile
     ];
   }
+  bool shouldShowAppBar(int index) {
+    return index == 0;
+  }
   @override
   void initState() {
     super.initState();
@@ -53,12 +62,27 @@ class _HomeState extends State<Home> {
 
   // Hàm lấy tên tài khoản từ SharedPreferences
   void _loadUserName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? fullname = prefs.getString('fullname');
-    print('fullname: $fullname');
-    setState(() {
-      userName = fullname ?? 'Người dùng';
-    });
+    // Lấy user hiện tại từ Firebase Authentication
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      String userEmail = currentUser.email ?? '';
+
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users') // Tên collection của bạn
+          .doc(userEmail) // Sử dụng email làm documentId
+          .get();
+
+      if (userDoc.exists) {
+        String? fullname = userDoc['fullname']; // Lấy fullname từ Firestore
+        print('fullname: $fullname');
+        setState(() {
+          userName = fullname ?? 'Người dùng'; // Nếu không có fullname, hiển thị "Người dùng"
+        });
+      } else {
+        print('User document not found');
+      }
+    }
   }
   // Hàm xử lý đăng xuất
   void _logout() async {
@@ -74,12 +98,14 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey, // Gán GlobalKey cho Scaffold
-      appBar: AppBar(
+      key: _scaffoldKey,
+      appBar: shouldShowAppBar(_bottomNavIndex)
+          ? AppBar(
         leading: IconButton(
-          icon: Icon(Icons.menu, color: Colors.white70, size: 30), // Nút ba gạch
+          icon: Icon(Icons.menu, color: Colors.white70, size: 30),
           onPressed: () {
-            _scaffoldKey.currentState?.openDrawer(); // Mở menu khi nhấn vào nút ba gạch
+            _scaffoldKey.currentState
+                ?.openDrawer();
           },
         ),
         title: const Center(
@@ -94,37 +120,39 @@ class _HomeState extends State<Home> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search, color: Colors.white70, size: 30), // Kính lúp
+            icon: Icon(Icons.search, color: Colors.white70, size: 30),
             onPressed: () {
-              // Thêm chức năng tìm kiếm nếu cần
             },
           ),
           Stack(
             children: [
               IconButton(
-                icon: Icon(Icons.notifications, color: Colors.white70, size: 30), // Biểu tượng thông báo
+                icon: Icon(Icons.notifications,
+                    color: Colors.white70, size: 30),
                 onPressed: () {
-                  // Thêm chức năng cho biểu tượng thông báo nếu cần
+
                 },
               ),
               Positioned(
                 right: 0,
                 child: Container(
-                  padding: EdgeInsets.all(2), // Đệm để làm nổi bật số lượng
+                  padding:
+                  EdgeInsets.all(2),
                   constraints: BoxConstraints(
                     minWidth: 20,
                     minHeight: 20,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.red, // Màu nền cho số lượng
-                    borderRadius: BorderRadius.circular(10), // Đường viền tròn
+                    color: Colors.red,
+                    borderRadius:
+                    BorderRadius.circular(10),
                   ),
                   child: const Center(
                     child: Text(
-                      '1', // Số lượng thông báo
+                      '1',
                       style: TextStyle(
-                        color: Colors.white, // Màu chữ
-                        fontSize: 12, // Kích thước chữ
+                        color: Colors.white,
+                        fontSize: 12,
                       ),
                     ),
                   ),
@@ -134,21 +162,57 @@ class _HomeState extends State<Home> {
           ),
         ],
         backgroundColor: primaryColor,
-      ),
+      )
+          : null,
       drawer: Drawer( // Thêm Drawer (menu bên trái)
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
               decoration: BoxDecoration(
-                color: primaryColor, // Màu nền của phần tiêu đề menu
+                color: primaryColor,
               ),
-              child: Text(
-                'Xin chào, $userName',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+              child: Row(
+                children: [
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 28.0,
+                        backgroundImage: _avatarImage != null
+                            ? FileImage(_avatarImage!)
+                            : userProfilePicture != null
+                            ? NetworkImage(userProfilePicture!)
+                        as ImageProvider
+                            : NetworkImage(
+                            'https://www.w3schools.com/w3images/avatar2.png'),
+                      ),
+                      Positioned(
+                        top: 30,
+                        left: 30,
+                        child: IconButton(
+                          icon: Icon(Icons.edit),
+                          onPressed: () async {
+                            final pickedImage = await ImagePicker()
+                                .pickImage(source: ImageSource.gallery);
+                            if (pickedImage != null) {
+                              setState(() {
+                                _avatarImage = File(pickedImage.path);
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 16.0),
+                  Text(
+                    '$userName',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
             ListTile(

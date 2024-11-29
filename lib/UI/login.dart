@@ -10,6 +10,8 @@ import 'package:weather/UI/custom_textfield.dart';
 import 'package:weather/UI/forgot_password.dart';
 import 'package:weather/UI/home.dart';
 import 'package:weather/UI/signup.dart';
+import 'package:weather/Expert/homeExpert.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -37,11 +39,11 @@ class _SignInPageState extends State<SignInPage> {
         idToken: googleAuth.idToken,
       );
       await _auth.signInWithCredential(credential);
+
       // Lưu tên người dùng vào SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true); // Lưu trạng thái đăng nhập
-      await prefs.setString('userName', googleUser.displayName ?? 'Người dùng'); // Lưu tên hoặc "Người dùng" nếu không có
-
+      await prefs.setString('userName', googleUser.displayName ?? 'Người dùng'); // Lưu tên
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -49,10 +51,8 @@ class _SignInPageState extends State<SignInPage> {
         ),
       );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Home()),
-      );
+      // Chuyển hướng dựa trên vai trò
+      await _navigateBasedOnRole();
     } catch (e) {
       print('Đăng nhập thất bại: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,10 +62,32 @@ class _SignInPageState extends State<SignInPage> {
       );
     }
   }
+  Future<void> _navigateBasedOnRole() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? role = prefs.getString('role');
 
-  static Future<User?> loginUsingEmailPassword({
+    if (role == 'Admin') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => AdminPage()),
+      );
+    } else if (role == 'Expert') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) =>const ExpertHome()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Home()),
+      );
+    }
+  }
+
+  Future<User?> loginUsingEmailPassword({
     required String email,
     required String password,
+    required String selectedRole,
     required BuildContext context,
   }) async {
     FirebaseAuth auth = FirebaseAuth.instance;
@@ -76,11 +98,50 @@ class _SignInPageState extends State<SignInPage> {
         email: email,
         password: password,
       );
+
       user = userCredential.user;
-      // Lưu thông tin người dùng vào SharedPreferences
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true); // Lưu trạng thái đăng nhập
-      await prefs.setString('userName', user?.displayName ?? email);
+
+      if (user != null) {
+        final firestore = FirebaseFirestore.instance;
+        DocumentSnapshot userDoc = await firestore.collection('users').doc(email).get();
+
+        if (userDoc.exists) {
+          String roleFromFirestore = userDoc['role'] ?? '';
+          if (roleFromFirestore != selectedRole) {
+            // Nếu vai trò không khớp, thông báo lỗi
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Role mismatch. Please check your role.")),
+            );
+            return null;
+          }
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isLoggedIn', true);
+          await prefs.setString('userName', user.displayName ?? email);
+          await prefs.setString('role', roleFromFirestore);
+
+          if (roleFromFirestore == 'Admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => AdminPage()),
+            );
+          } else if (roleFromFirestore == 'Expert') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => ExpertHome()),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => Home()),
+            );
+          }
+
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("No user data found in Firestore.")),
+          );
+        }
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == "user-not-found") {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -152,7 +213,32 @@ class _SignInPageState extends State<SignInPage> {
                   },
                 ),
                 const SizedBox(height: 5),
-
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: 'Select Role',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                  value: selectedRole,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedRole = newValue;
+                    });
+                  },
+                  items: ['User', 'Expert', 'Admin']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a role';
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 15),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -168,30 +254,18 @@ class _SignInPageState extends State<SignInPage> {
                       final password = _passwordController.text.trim();
                       print('Email: $email');
                       print('Password: $password');
-
                       User? user = await loginUsingEmailPassword(
                         email: email,
                         password: password,
+                        selectedRole: selectedRole!,
                         context: context,
                       );
-
                       if (user != null) {
                         SharedPreferences prefs = await SharedPreferences.getInstance();
                         await prefs.setString('email', email); // Lưu địa chỉ email
-                        // Kiểm tra email và mật khẩu
-                        if (email == '123@gmail.com' && password == '1234567890') {
-                          // Nếu là admin, chuyển đến trang Admin
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) =>  AdminPage()),
-                          );
-                        } else {
-                          // Nếu không phải admin, chuyển đến trang Home
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const Home()),
-                          );
-                        }
+                        await prefs.setString('role', selectedRole ?? 'User'); // Lưu vai trò
+                        // Chuyển hướng dựa trên vai trò đã chọn
+                        await _navigateBasedOnRole();
                       }
                     }
                   },

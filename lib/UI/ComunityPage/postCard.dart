@@ -27,12 +27,11 @@ class PostCard extends StatelessWidget {
                   () => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hàng với ảnh đại diện và tên người dùng
                   Row(
                     children: [
                       CircleAvatar(
                         backgroundImage: NetworkImage(
-                          'https://via.placeholder.com/150', // Placeholder cho ảnh đại diện
+                          'https://via.placeholder.com/150',
                         ),
                         radius: 20,
                       ),
@@ -50,7 +49,6 @@ class PostCard extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 6),
-                  // Thời gian đăng bài
                   Text(
                     '${Get.find<PostController>().posts.firstWhere((p) => p.id == post.id).timestamp.toLocal()}',
                     style: TextStyle(
@@ -59,7 +57,6 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 8),
-                  // Tiêu đề bài viết
                   Text(
                     Get.find<PostController>().posts
                         .firstWhere((p) => p.id == post.id)
@@ -71,7 +68,6 @@ class PostCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 12),
-                  // Hiển thị hình ảnh nếu có
                   if (post.images.isNotEmpty) ...[
                     SizedBox(
                       height: 200,
@@ -96,9 +92,7 @@ class PostCard extends StatelessWidget {
                     ),
                     SizedBox(height: 12),
                   ],
-                  // Đường kẻ ngang
                   Divider(color: Colors.grey.shade300, thickness: 1),
-                  // Các nút hành động
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [

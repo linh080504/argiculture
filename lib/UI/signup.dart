@@ -12,6 +12,7 @@ import 'package:weather/UI/custom_textfield.dart';
 import 'package:weather/UI/home.dart';
 import 'package:weather/UI/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:weather/UI/CustomDropDow.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -25,7 +26,10 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController(); // Thêm controller cho re-enter password
+  final TextEditingController _confirmPasswordController =
+      TextEditingController(); // Thêm controller cho re-enter password
+  List<String> availableRoles = ['User', 'Expert', 'Admin'];
+  String? selectedRole;
 
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   bool isSigningUp = false;
@@ -34,25 +38,33 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<void> _signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
+      if (googleUser == null) {
+        return;
+      }
 
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      await _auth.signInWithCredential(credential);
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      User? user = userCredential.user;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đăng nhập thành công'),
-        ),
-      );
+      if (user != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.email)
+            .get();
+        if (!userDoc.exists) {
+          await addUserToFirestore(
+              user.email!, user.displayName ?? 'Unknown', '', 'User');
+        }
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Home()),
-      );
+        _showRoleDialog(user);
+      }
     } catch (e) {
       print('Đăng nhập thất bại: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,17 +74,59 @@ class _SignUpPageState extends State<SignUpPage> {
       );
     }
   }
+
+  Future<void> _showRoleDialog(User user) async {
+    String? selectedRole = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Chọn Vai Trò'),
+          content: DropdownButton<String>(
+            items: ['User', 'Expert', 'Admin']
+                .map((role) => DropdownMenuItem<String>(
+                      value: role,
+                      child: Text(role),
+                    ))
+                .toList(),
+            onChanged: (value) {
+              Navigator.of(context).pop(value);
+            },
+            hint: Text('Chọn vai trò'),
+          ),
+        );
+      },
+    );
+
+    if (selectedRole != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.email)
+          .update({
+        'role': selectedRole,
+      });
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('role', selectedRole);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Home()),
+      );
+    }
+  }
+
   // Thêm phương thức này vào lớp _SignUpPageState
-  Future<void> addUserToFirestore(String email, String fullname, String password) async {
+  Future<void> addUserToFirestore(
+      String email, String fullname, String password, String role) async {
     try {
       // Lấy tham chiếu đến Firestore
-      CollectionReference users = FirebaseFirestore.instance.collection('users');
-
-      // Tạo một tài liệu mới với email làm ID
+      CollectionReference users =
+          FirebaseFirestore.instance.collection('users');
       await users.doc(email).set({
         'fullname': fullname,
         'email': email,
-        'password': password, // Lưu mật khẩu có thể không an toàn, bạn có thể xem xét không lưu mật khẩu hoặc mã hóa nó
+        'password': password,
+        'role': role,
       });
 
       print("User added to Firestore successfully");
@@ -80,15 +134,16 @@ class _SignUpPageState extends State<SignUpPage> {
       print("Failed to add user to Firestore: $e");
     }
   }
+
   @override
   void dispose() {
     _emailController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose(); // Dispose controller khi không cần nữa
+    _confirmPasswordController
+        .dispose(); // Dispose controller khi không cần nữa
     super.dispose();
   }
-
 
   void _signUp() async {
     if (_formKey.currentState!.validate()) {
@@ -99,13 +154,15 @@ class _SignUpPageState extends State<SignUpPage> {
       String email = _emailController.text;
       String password = _passwordController.text;
       String fullname = _usernameController.text;
+      String role = selectedRole ?? 'User';
       try {
         User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
         if (user != null) {
-          await addUserToFirestore(email, fullname, password);
+          await addUserToFirestore(email, fullname, password, role);
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setString('fullname', fullname);
+          await prefs.setString('role', role);
 
           setState(() {
             isSigningUp = false;
@@ -114,7 +171,7 @@ class _SignUpPageState extends State<SignUpPage> {
           showToast(message: "User is successfully created");
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const Home()),
+            MaterialPageRoute(builder: (context) => const SignInPage()),
           );
         }
       } on FirebaseAuthException catch (e) {
@@ -123,7 +180,8 @@ class _SignUpPageState extends State<SignUpPage> {
         });
 
         if (e.code == 'email-already-in-use') {
-          showToast(message: "Email đã được đăng ký. Vui lòng sử dụng email khác.");
+          showToast(
+              message: "Email đã được đăng ký. Vui lòng sử dụng email khác.");
         } else {
           showToast(message: "Some error happened: ${e.message}");
         }
@@ -135,7 +193,6 @@ class _SignUpPageState extends State<SignUpPage> {
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -186,6 +243,24 @@ class _SignUpPageState extends State<SignUpPage> {
                     return null;
                   },
                 ),
+                CustomDropdown(
+                  hintText: 'Select Roles',
+                  icon: Icons.work,
+                  items: availableRoles,
+                  selectedValue: selectedRole,
+                  // Assuming 'selectedRole' is a String? variable
+                  onChanged: (updatedRole) {
+                    setState(() {
+                      selectedRole = updatedRole; // Update the selected role
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a role';
+                    }
+                    return null;
+                  },
+                ),
                 CustomTextfield(
                   obscureText: true,
                   hintText: 'Enter Password',
@@ -199,8 +274,10 @@ class _SignUpPageState extends State<SignUpPage> {
                   },
                 ),
                 CustomTextfield(
-                  obscureText: true, // Ẩn nội dung cho trường nhập lại mật khẩu
-                  hintText: 'Re-enter Password', // Nhập lại mật khẩu
+                  obscureText: true,
+                  // Ẩn nội dung cho trường nhập lại mật khẩu
+                  hintText: 'Re-enter Password',
+                  // Nhập lại mật khẩu
                   icon: Icons.lock,
                   controller: _confirmPasswordController,
                   validator: (value) {
@@ -217,14 +294,22 @@ class _SignUpPageState extends State<SignUpPage> {
                   height: 10,
                 ),
                 GestureDetector(
-                  onTap: _signUp,
+                  onTap: () async {
+                    _signUp();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SignInPage()),
+                    );
+                  },
                   child: Container(
                     width: size.width,
                     decoration: BoxDecoration(
                       color: secondColor,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 20),
                     child: const Center(
                       child: Text(
                         'Sign Up',
@@ -259,7 +344,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     decoration: BoxDecoration(
                         border: Border.all(color: secondColor),
                         borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 15),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -316,7 +402,3 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
-
-
-
-
