@@ -3,12 +3,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:path/path.dart' as path;
+
 
 class PostController extends GetxController {
   var title = ''.obs;
   var selectedImages = <XFile>[].obs;
   var posts = <Post>[].obs;
-  final comments = <Comment>[].obs;
+  var comments = <Comment>[].obs;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Future<void> fetchPosts() async {
@@ -19,7 +23,7 @@ class PostController extends GetxController {
           .get();
 
       posts.value = snapshot.docs.map((doc) {
-        var post = Post(
+        return Post(
           id: doc.id,
           title: doc['title'],
           user: doc['user'],
@@ -27,80 +31,66 @@ class PostController extends GetxController {
           images: List<String>.from(doc['images']),
           comments: [],
         );
-
-        FirebaseFirestore.instance
-            .collection('posts')
-            .doc(doc.id)
-            .collection('comments')
-            .orderBy('timestamp')
-            .get()
-            .then((commentSnapshot) {
-          post.comments = commentSnapshot.docs.map((commentDoc) {
-            return Comment.fromJson(commentDoc.data());
-          }).toList();
-        });
-
-        return post;
       }).toList();
     } catch (e) {
       print("Error fetching posts: $e");
     }
   }
 
-  Future<void> addPost(String userName, {List<XFile>? images}) async {
+  Future<void> addPost({
+    required String title,
+    required List<XFile> images,
+  }) async {
     try {
-      // Tạo một ID duy nhất cho post mới
-      String postId = FirebaseFirestore.instance.collection('posts').doc().id;
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        print("User not logged in!");
+        return;
+      }
+      String userId = currentUser.email ?? currentUser.uid;  // Lấy userId (email hoặc UID) của người dùng hiện tại
       List<String> imageUrls = [];
-
-      // Kiểm tra nếu có hình ảnh trong `selectedImages`
-      for (XFile image in selectedImages) {
+      for (XFile image in images) {
         try {
           File imageFile = File(image.path);
-          String fileName = '$postId-${image.name}';
-
-          // Tạo một tham chiếu đến vị trí lưu trữ ảnh
-          final ref = _storage.ref().child('posts/$fileName');
-
-          // Dùng `putFile` để tải ảnh lên Firebase Storage
+          String fileName = '${DateTime.now().millisecondsSinceEpoch}-${image.name}';
+          final ref = FirebaseStorage.instance.ref().child('posts/$fileName');
           UploadTask uploadTask = ref.putFile(imageFile);
 
-          // Chờ upload hoàn tất
           TaskSnapshot snapshot = await uploadTask;
           if (snapshot.state == TaskState.success) {
-            // Lấy URL của ảnh
             String downloadUrl = await snapshot.ref.getDownloadURL();
             imageUrls.add(downloadUrl);
-            print("Image uploaded: $downloadUrl");
-          } else {
-            print("Failed to upload image: ${snapshot.state}");
           }
-        } catch (uploadError) {
-          print("Error uploading image: $uploadError");
+        } catch (e) {
+          print("Error uploading image: $e");
         }
       }
+      String postId = FirebaseFirestore.instance.collection('posts').doc().id;
 
-      // Lưu dữ liệu bài viết với URLs của ảnh vào Firestore
-      await FirebaseFirestore.instance.collection('posts').doc(postId).set({
-        'user': userName,
-        'title': title.value,
-        'postId': postId,
+      Map<String, dynamic> postData = {
+        'title': title,
         'timestamp': FieldValue.serverTimestamp(),
-        'images': imageUrls, // Lưu URLs của ảnh
-      });
+        'images': imageUrls,
+        'user': userId,
+      };
 
-      // Reset sau khi thêm post
-      title.value = '';
-      selectedImages.clear();
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('posts')
+          .doc(postId)
+          .set(postData);
+
+      await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(postId)
+          .set(postData);
+
       print("Post added successfully!");
-
-      fetchPosts(); // Reload danh sách posts
     } catch (e) {
-      print("Error adding post: $e");
+      throw Exception("Error adding post: $e");
     }
   }
-
-
   Future<void> fetchComments(String postId) async {
     try {
       QuerySnapshot commentSnapshot = await FirebaseFirestore.instance
@@ -113,30 +103,71 @@ class PostController extends GetxController {
       List<Comment> fetchedComments = commentSnapshot.docs.map((doc) {
         return Comment.fromJson(doc.data() as Map<String, dynamic>);
       }).toList();
+
       Get.find<PostController>().comments.value = fetchedComments;
-      Get.find<PostController>().update();
+      Get.find<PostController>().update();  // Cập nhật UI
+
     } catch (e) {
       print("Error fetching comments: $e");
     }
   }
-
-  Future<void> addComment(String postId, String userName, String commentText) async {
+  Future<void> addComment(String postId, String commentText, XFile? imageFile) async {
     try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('Người dùng chưa đăng nhập.');
+      }
+
+      String userId = currentUser.email ?? 'unknown_user@email.com'; // Dùng email làm userId
+      String userName = currentUser.displayName ?? 'Người dùng'; // Tên người comment
+      String profilePicture = currentUser.photoURL ?? 'https://via.placeholder.com/150'; // Ảnh đại diện người comment
+
+      String commentId = FirebaseFirestore.instance
+          .collection('posts')
+          .doc(postId)
+          .collection('comments')
+          .doc()
+          .id;
+
+      Map<String, dynamic> commentData = {
+        'commentId': commentId,
+        'text': commentText,
+        'timestamp': FieldValue.serverTimestamp(),
+        'userId': userId,
+        'userName': userName,
+        'profilePicture': profilePicture
+      };
+
+      if (imageFile != null) {
+        String imageUrl = await uploadImage(imageFile);
+        commentData['imageUrl'] = imageUrl;
+      }
+
       await FirebaseFirestore.instance
           .collection('posts')
           .doc(postId)
           .collection('comments')
-          .add({
-        'user': userName,
-        'comment': commentText,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+          .doc(commentId)
+          .set(commentData);
 
-      print("Comment added successfully!");
-
-      fetchPosts();
+      print('Thêm bình luận thành công!');
     } catch (e) {
-      print("Error adding comment: $e");
+      print('Lỗi khi thêm bình luận: $e');
+      throw e;
+    }
+  }
+
+  Future<String> uploadImage(XFile imageFile) async {
+    try {
+      String fileName = path.basename(imageFile.path);
+      Reference storageRef = FirebaseStorage.instance.ref().child('comments_images/$fileName');
+      UploadTask uploadTask = storageRef.putFile(File(imageFile.path));
+      TaskSnapshot taskSnapshot = await uploadTask;
+      String downloadUrl = await taskSnapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print("Error uploading image: $e");
+      throw e;
     }
   }
 }
@@ -182,31 +213,34 @@ class Post {
     return data;
   }
 }
-
 class Comment {
-  final String user;
+  final String userId;
   final String comment;
   final DateTime timestamp;
+  final String profilePicture;
 
   Comment({
-    required this.user,
+    required this.userId,
     required this.comment,
     required this.timestamp,
+    required this.profilePicture,
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) {
     return Comment(
-      user: json['user'] as String,
-      comment: json['comment'] as String,
+      userId: json['userId'] as String,
+      comment: json['text'] as String,
       timestamp: (json['timestamp'] as Timestamp).toDate(),
+      profilePicture: json['profilePicture'] as String,
     );
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['user'] = this.user;
+    data['userId'] = this.userId;
     data['comment'] = this.comment;
     data['timestamp'] = Timestamp.fromDate(timestamp);
+    data['profilePicture'] = this.profilePicture;
     return data;
   }
 }

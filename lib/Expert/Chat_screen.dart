@@ -1,77 +1,106 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:weather/UI/Chat/ChatCard.dart'; // Import CardChat widget
 
-class ChatScreen extends StatefulWidget {
-  @override
-  _ChatScreenState createState() => _ChatScreenState();
-}
-
-class _ChatScreenState extends State<ChatScreen> {
-  final List<Message> messages = [
-    // Danh sách các tin nhắn ví dụ
-    Message(
-        isMe: true,
-        text: 'Xin chào, bạn có thể giúp tôi với vấn đề này không?',
-        time: '10:00 AM'),
-    Message(
-        isMe: false,
-        text:
-        'Chào bạn, mình sẵn lòng giúp bạn. Bạn có thể mô tả vấn đề của mình rõ hơn không?',
-        time: '10:05 AM'),
-  ];
-  String searchText = '';
-
+class ExpertChatList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: TextField(
-          decoration: InputDecoration(
-            hintText: 'Tìm kiếm tin nhắn',
-            hintStyle: TextStyle(
-              color: Colors.black12,
-            ),
-            prefixIcon: Icon(Icons.search),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24.0),
-            ),
-            filled: true,
-            fillColor: Colors.white12,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24.0),
-            ),
-          ),
-          onChanged: (value) {
-            setState(() {
-              searchText = value;
-            });
-          },
-          style: TextStyle(
-            color: Colors.black,
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: EdgeInsets.only(top: 20.0),
-        child: ListView.builder(
-          itemCount: messages.length,
-          itemBuilder: (context, index) {
-            final message = messages[index];
-            return Card(
+    final currentUserId = FirebaseAuth.instance.currentUser!.email!; // Get current user's email
 
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('conversations')
+          .where('expertId', isEqualTo: currentUserId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Center(child: Text('No conversations yet.'));
+        }
+
+        final conversations = snapshot.data!.docs
+            .where((doc) => doc['lastTimestamp'] != null)
+            .toList();
+
+        conversations.sort((a, b) => b['lastTimestamp'].compareTo(a['lastTimestamp']));
+
+        return ListView.builder(
+          itemCount: conversations.length,
+          itemBuilder: (context, index) {
+            final conversation = conversations[index];
+            final userId = conversation['userId'];
+            final lastMessage = conversation['lastMessage'];
+            final conversationId = conversation['conversationId'];
+
+            return FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
+              builder: (context, userSnapshot) {
+                if (userSnapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                if (userSnapshot.hasError) {
+                  return Center(child: Text('Error: ${userSnapshot.error}'));
+                }
+
+                if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+                  return Center(child: Text('User not found.'));
+                }
+
+                final userFullName = userSnapshot.data!['fullname'] ?? 'User';
+
+                final userAvatar = userSnapshot.data!['profilePicture'] ?? '';
+
+                return FutureBuilder<DocumentSnapshot>(
+                  future: FirebaseFirestore.instance.collection('users').doc(currentUserId).get(),
+                  builder: (context, expertSnapshot) {
+                    if (expertSnapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+
+                    if (expertSnapshot.hasError) {
+                      return Center(child: Text('Error: ${expertSnapshot.error}'));
+                    }
+
+                    if (!expertSnapshot.hasData || !expertSnapshot.data!.exists) {
+                      return Center(child: Text('Không tìm ra thông tin chuyên gia.'));
+                    }
+
+                    final expertAvatar = expertSnapshot.data!['profilePicture'] ?? '';
+                    final expertFullName = expertSnapshot.data!['fullname'] ?? 'Expert';
+
+                    final conversationData = conversation.data() as Map<String, dynamic>?;
+                    final unread = conversationData?.containsKey('unread') == true
+                        ? conversationData!['unread'] ?? false  // Default to false if 'unread' doesn't exist
+                        : false;  // Default to false if conversationData is null or 'unread' is not found
+
+                     return CardChat(
+                      userId: userId,
+                      expertId: currentUserId,
+                      currentUserId: currentUserId,
+                      lastMessage: lastMessage,
+                      conversationId: conversationId,
+                      userAvatar: userAvatar,
+                      expertAvatar: expertAvatar,
+                      userFullName: userFullName,
+                      expertFullName: expertFullName,
+                      unread: unread,
+                    );
+                  },
+                );
+              },
             );
           },
-        ),
-      ),
+        );
+      },
     );
   }
-}
-
-class Message {
-  final bool isMe;
-  final String text;
-  final String time;
-
-  Message({required this.isMe, required this.text, required this.time});
 }

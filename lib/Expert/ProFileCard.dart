@@ -1,127 +1,130 @@
 import 'package:flutter/material.dart';
+import 'package:weather/Expert/ShowInformationPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:weather/UI/Chat/ChatPage.dart';
+import 'package:weather/Expert/ProfileController.dart';
 
 class ProfileCard extends StatelessWidget {
-  final String fullName;
-  final String bio;
-  final String degree;
-  final String profilePictureUrl;
+  final ExpertData expertData;
 
   const ProfileCard({
     Key? key,
-    required this.fullName,
-    required this.bio,
-    required this.degree,
-    required this.profilePictureUrl,
+    required this.expertData,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      elevation: 5, // Thêm độ nổi để tạo cảm giác mượt mà hơn
+      elevation: 5,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12), // Làm tròn góc của card
+        borderRadius: BorderRadius.circular(8),
       ),
+      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Phần hiển thị ảnh đại diện và thông tin cơ bản
-          ListTile(
-            leading: CircleAvatar(
-              radius: 30,
-              backgroundImage: profilePictureUrl.isNotEmpty
-                  ? NetworkImage(profilePictureUrl)
-                  : null,
-              child: profilePictureUrl.isEmpty
-                  ? const Icon(Icons.person,
-                      size: 30,
-                      color: Colors.white) // Biểu tượng người nếu không có ảnh
-                  : null,
-            ),
-            title: Text(
-              fullName,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.black87,
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ShowInformationPage(expertData: expertData),
+                ),
+              );
+            },
+            child: ListTile(
+              leading: CircleAvatar(
+                radius: 50,
+                backgroundImage: expertData.profilePictureUrl.isNotEmpty
+                    ? NetworkImage(expertData.profilePictureUrl)
+                    : null,
+                child: expertData.profilePictureUrl.isEmpty
+                    ? const Icon(Icons.person, size: 30, color: Colors.white)
+                    : null,
               ),
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                bio,
-                style: TextStyle(
-                  color: Colors.grey[700], // Màu chữ phụ
-                  fontSize: 14,
+              title: Text(
+                expertData.degree,
+                style: const TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.black54,
+                ),
+              ),
+              subtitle: Text(
+                expertData.fullName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.black87,
                 ),
               ),
             ),
           ),
-
-          // Phần hiển thị học vị
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              '$degree',
-              style: const TextStyle(
-                color: Colors.black54, // Màu chữ nhẹ hơn
-                fontSize: 14,
-                fontStyle: FontStyle.italic, // Thêm kiểu chữ nghiêng cho học vị
-              ),
-            ),
-          ),
-
-          // Đoạn chia cách (divider) giữa các thông tin
-          Divider(
-            color: Colors.grey[300],
-            thickness: 1,
-            indent: 16,
-            endIndent: 16,
-          ),
+          const SizedBox(height: 24),
           Container(
             color: Colors.blue[100],
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: Icon(Icons.wechat_outlined, color: Colors.indigoAccent),
-                  label: Text(
-                    'Tư vấn',
-                    style: TextStyle(fontSize: 14),
-                  ),
+                  onPressed: () async {
+                    final currentUserId = FirebaseAuth.instance.currentUser!.email!;
+                    final expertId = expertData.id;
+                    final conversationId = "${currentUserId}_$expertId";
+                    final conversationRef = FirebaseFirestore.instance
+                        .collection('conversations')
+                        .doc(conversationId);
+                    final conversationDoc = await conversationRef.get();
+
+                    if (!conversationDoc.exists) {
+                      await conversationRef.set({
+                        'conversationId': conversationId,
+                        'userId': currentUserId,
+                        'expertId': expertId,
+                        'lastMessage': '',
+                        'lastTimestamp': FieldValue.serverTimestamp(),
+                      });
+                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatPage(
+                          conversationId: conversationId,
+                          currentUserId: currentUserId,
+                        ),
+                      ),
+                    );
+                  },
+                  icon:
+                  const Icon(Icons.wechat_outlined, color: Colors.indigoAccent),
+                  label: const Text('Tư vấn', style: TextStyle(fontSize: 14)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.indigoAccent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    elevation: 0,
-                    side: BorderSide(color: Colors.indigoAccent),
+                    side: const BorderSide(color: Colors.indigoAccent),
                   ),
                 ),
                 ElevatedButton.icon(
                   onPressed: () {},
-                  icon: Icon(Icons.add_call, color: Colors.white),
-                  label: Text(
-                    'Liên hệ',
-                    style: TextStyle(fontSize: 14),
-                  ),
+                  icon: const Icon(Icons.add_call, color: Colors.white),
+                  label: const Text('Liên hệ', style: TextStyle(fontSize: 14)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[500],
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    elevation: 0,
-                    side: BorderSide(color: Colors.white),
+                    side: const BorderSide(color: Colors.white),
                   ),
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

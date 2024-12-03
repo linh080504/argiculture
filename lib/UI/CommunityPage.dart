@@ -89,20 +89,15 @@ class _CommunityPageState extends State<CommunityPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const CircularProgressIndicator(
-                          color: Colors.green,
-                        ),
+                        const CircularProgressIndicator(color: Colors.green),
                         const SizedBox(height: 10),
-                        const Text(
-                          'Đang tải bài viết...',
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
-                        ),
+                        const Text('Đang tải bài viết...',
+                            style: TextStyle(color: Colors.grey, fontSize: 16)),
                       ],
                     ),
                   );
                 } else {
                   return ListView.builder(
-                    physics: const BouncingScrollPhysics(),
                     itemCount: _postController.posts.length,
                     itemBuilder: (context, index) {
                       final post = _postController.posts[index];

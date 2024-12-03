@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:weather/UI/ComunityPage/PostController.dart';
 
 class CommentCard extends StatelessWidget {
@@ -9,69 +10,84 @@ class CommentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 3, // Thêm hiệu ứng đổ bóng nhẹ cho card
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10), // Góc bo tròn cho card
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0), // Thêm padding cho card
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: 25, // Đặt kích thước cho avatar
-              backgroundColor: Colors.blue, // Màu nền cho avatar
-              child: Text(
-                comment.user[0], // Lấy chữ cái đầu tiên của tên người dùng
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              ),
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(comment.userId)
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (!snapshot.hasData || !snapshot.data!.exists) {
+          return Center(child: Text('User not found'));
+        } else {
+          var userData = snapshot.data!;
+          String userFullName = userData['fullname'] ?? 'Người dùng';
+          String profilePicture = userData['profilePicture'] ?? 'https://via.placeholder.com/150';
+
+          return Card(
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
-            const SizedBox(width: 10), // Khoảng cách giữa avatar và nội dung
-            Expanded(
-              child: Column(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    comment.user,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                  CircleAvatar(
+                    radius: 25,
+                    backgroundImage: NetworkImage(profilePicture),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userFullName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          DateFormat('dd/MM/yyyy HH:mm').format(comment.timestamp),
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          comment.comment,
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.thumb_up, color: Colors.blue),
+                              onPressed: () {},
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.comment, color: Colors.blue),
+                              onPressed: () {},
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    DateFormat('dd/MM/yyyy HH:mm').format(comment.timestamp),
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    comment.comment,
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.thumb_up, color: Colors.blue),
-                        onPressed: () {
-                          // Logic cho like button
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.comment, color: Colors.blue),
-                        onPressed: () {
-                          // Logic cho reply button
-                        },
-                      ),
-                    ],
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+      },
     );
   }
 }
+
+
+

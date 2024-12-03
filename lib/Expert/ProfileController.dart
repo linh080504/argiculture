@@ -10,36 +10,34 @@ class ProfilesController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Lấy danh sách hồ sơ chuyên gia
   Future<void> fetchExpertProfiles() async {
     try {
-      User? user = _auth.currentUser;
-      if (user == null) return;
+      QuerySnapshot userDocs = await _firestore.collection('users').get();
 
-      // Lấy danh sách tất cả hồ sơ của người dùng
-      QuerySnapshot querySnapshot = await _firestore
-          .collection('users')
-          .doc(user.email)  // Dùng email làm ID người dùng
-          .collection('profiles')
-          .get();
-
-      // Xóa danh sách hiện tại và thêm các hồ sơ mới vào expertList
       expertList.clear();
-      for (var doc in querySnapshot.docs) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-        ExpertData profile = ExpertData(
-          id: doc.id,
-          userId: user.uid,
-          fullName: data['fullname'] ?? '',
-          bio: data['bio'] ?? '',
-          degree: data['degree'] ?? '',
-          profilePictureUrl: data['avt'] ?? '',
-        );
+      for (var userDoc in userDocs.docs) {
+        String userEmail = userDoc.id;
 
-        // Kiểm tra nếu đã tồn tại hồ sơ với profileId trùng lặp
-        bool exists = expertList.any((p) => p.id == profile.id);
-        if (!exists) {
+        DocumentSnapshot profileDoc = await userDoc.reference
+            .collection('profiles')
+            .doc(userEmail)
+            .get();
+
+        if (profileDoc.exists) {
+          Map<String, dynamic> data = profileDoc.data() as Map<String, dynamic>;
+
+          ExpertData profile = ExpertData(
+            id: userEmail, // Email làm ID cho profile
+            userId: userDoc.id, // ID của user
+            fullName: data['fullname'] ?? '',
+            bio: data['bio'] ?? '',
+            degree: data['degree'] ?? '',
+            profilePictureUrl: data['avt'] ?? '',
+            experience: data['experience'] ?? '',
+            supportGroup: data['supportGroup'] ?? '',
+          );
+
           expertList.add(profile);
         }
       }
@@ -48,17 +46,23 @@ class ProfilesController extends GetxController {
     }
   }
 
-  // Lưu hoặc cập nhật hồ sơ của người dùng
-  Future<void> saveOrUpdateProfile(String fullName, String bio, String degree, XFile? profilePic) async {
+  Future<void> saveOrUpdateProfile(
+      String fullName,
+      String bio,
+      String degree,
+      String experience,
+      String supportGroup,
+      XFile? profilePic,
+      ) async {
     try {
       User? user = _auth.currentUser;
       if (user == null) return;
 
       String userId = user.uid;
-      String profileId = user.email ?? ''; // Dùng email làm profileId
+      String profileId = user.email ?? '';
       String? profilePicUrl;
 
-      // Tải ảnh lên nếu có ảnh mới
+
       if (profilePic != null) {
         Reference storageReference = FirebaseStorage.instance
             .ref()
@@ -68,41 +72,46 @@ class ProfilesController extends GetxController {
         profilePicUrl = await snapshot.ref.getDownloadURL();
       }
 
-      // Tạo hoặc cập nhật hồ sơ trong Firestore
-      await _firestore
+      DocumentReference profileRef = _firestore
           .collection('users')
-          .doc(user.email)  // Dùng email làm document ID
+          .doc(user.email)
           .collection('profiles')
-          .doc(profileId)  // Dùng email làm profile ID
-          .set({
+          .doc(profileId);
+
+      bool profileExists = (await profileRef.get()).exists;
+      if (profileExists) {
+        await profileRef.delete();
+      }
+
+      await profileRef.set({
         'fullname': fullName,
         'bio': bio,
         'degree': degree,
-        'avt': profilePicUrl ?? '',  // URL ảnh nếu có
-      }, SetOptions(merge: true));
+        'experience': experience,
+        'supportGroup': supportGroup,
+        'avt': profilePicUrl ?? '',
+      });
 
-      // Cập nhật lại danh sách hồ sơ chuyên gia
+
       fetchExpertProfiles();
     } catch (e) {
       print('Error saving/updating profile: $e');
     }
   }
 
-  // Xóa hồ sơ của người dùng
+
   Future<void> deleteProfile(String profileId) async {
     try {
       User? user = _auth.currentUser;
       if (user == null) return;
 
-      // Xóa hồ sơ trong Firestore
       await _firestore
           .collection('users')
-          .doc(user.email)  // Dùng email làm document ID
+          .doc(user.email)
           .collection('profiles')
-          .doc(profileId)  // Dùng profileId để xóa
+          .doc(profileId)
           .delete();
 
-      // Cập nhật lại danh sách hồ sơ chuyên gia
       fetchExpertProfiles();
     } catch (e) {
       print('Error deleting profile: $e');
@@ -110,7 +119,7 @@ class ProfilesController extends GetxController {
   }
 }
 
-// Model cho dữ liệu chuyên gia
+
 class ExpertData {
   final String id;
   final String userId;
@@ -118,6 +127,8 @@ class ExpertData {
   final String bio;
   final String degree;
   final String profilePictureUrl;
+  final String experience;
+  final String supportGroup;
 
   ExpertData({
     required this.id,
@@ -126,5 +137,7 @@ class ExpertData {
     required this.bio,
     required this.degree,
     required this.profilePictureUrl,
+    required this.experience,
+    required this.supportGroup,
   });
 }

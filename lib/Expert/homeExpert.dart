@@ -3,13 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weather/UI/login.dart';
 import 'package:weather/UI/CommunityPage.dart';
 import 'package:weather/Components/color.dart';
-import 'package:weather/Expert/Chat_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:weather/Expert/CreateProFileExpert.dart';
-import 'package:weather/Expert/ProfileController.dart';
+import 'package:weather/Expert/CreateProFileExpert.dart';  // Ensure this is imported
+import 'package:weather/Expert/Chat_screen.dart' as ChatScreen;  // Alias the import for ChatScreen
+import 'package:weather/UI/Chat/ChatPage.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class ExpertHome extends StatefulWidget {
   const ExpertHome({super.key});
@@ -32,7 +33,7 @@ class _ExpertHomeState extends State<ExpertHome> {
   }
 
   final List<Widget> _widgetOptions = [
-    ChatScreen(),
+    ChatScreen.ExpertChatList(),
     CommunityPage(),
   ];
 
@@ -68,14 +69,39 @@ class _ExpertHomeState extends State<ExpertHome> {
 
       if (userDoc.exists) {
         String? fullname = userDoc['fullname'];
+        String? profilePicture = userDoc['profilePicture'];
+
         setState(() {
           userName = fullname ?? 'Người dùng';
+          userProfilePicture = profilePicture ?? '';
         });
       } else {
         print('User document not found');
       }
     }
   }
+
+  Future<void> updateProfilePicture() async {
+    final pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      setState(() {
+        _avatarImage = File(pickedImage.path);
+      });
+
+      final storageRef = FirebaseStorage.instance.ref().child('profile_pictures/${FirebaseAuth.instance.currentUser!.email}.jpg');
+      await storageRef.putFile(_avatarImage!);
+
+      String imageUrl = await storageRef.getDownloadURL();
+      FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.email).update({
+        'profilePicture': imageUrl,
+      });
+
+      setState(() {
+        userProfilePicture = imageUrl;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,28 +149,17 @@ class _ExpertHomeState extends State<ExpertHome> {
                     children: [
                       CircleAvatar(
                         radius: 28.0,
-                        backgroundImage: _avatarImage != null
-                            ? FileImage(_avatarImage!)
-                            : userProfilePicture != null
+                        backgroundImage: userProfilePicture != null && userProfilePicture!.isNotEmpty
                             ? NetworkImage(userProfilePicture!)
-                        as ImageProvider
-                            : NetworkImage(
-                            'https://www.w3schools.com/w3images/avatar2.png'),
+                            : const NetworkImage('https://www.w3schools.com/w3images/avatar2.png'),  // Ảnh mặc định nếu không có ảnh đại diện
+                        backgroundColor: Colors.grey[200],
                       ),
                       Positioned(
                         top: 30,
                         left: 30,
                         child: IconButton(
                           icon: Icon(Icons.edit),
-                          onPressed: () async {
-                            final pickedImage = await ImagePicker()
-                                .pickImage(source: ImageSource.gallery);
-                            if (pickedImage != null) {
-                              setState(() {
-                                _avatarImage = File(pickedImage.path);
-                              });
-                            }
-                          },
+                          onPressed: updateProfilePicture,
                         ),
                       ),
                     ],
@@ -163,7 +178,7 @@ class _ExpertHomeState extends State<ExpertHome> {
             ListTile(
               leading: Icon(Icons.app_registration, color: Colors.black),
               title: Text(
-                'Create Profile',
+                'Tạo hồ sơ',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 18,
@@ -214,4 +229,3 @@ class _ExpertHomeState extends State<ExpertHome> {
     );
   }
 }
-

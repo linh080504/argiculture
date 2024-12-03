@@ -9,51 +9,49 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ExpertPage extends StatelessWidget {
   final profileController = Get.put(ProfilesController());
 
-  ExpertPage({Key? key}) : super(key: key);
+  ExpertPage({Key? key}) : super(key: key) {
+    profileController.fetchExpertProfiles();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_rounded, color: Colors.black, size: 30),
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Home()),
+              MaterialPageRoute(
+                builder: (context) => Home(),
+              ),
             );
           },
         ),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(width: 30),
-            Text(
-              'Chuyên gia nông nghiệp',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w400,
-                fontSize: 21,
-              ),
+        title: Center(
+          child: Text(
+            'Chuyên Gia Nông Nghiệp       ',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
             ),
-            SizedBox(width: 60),
-          ],
+          ),
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Obx(() {
-          // Kiểm tra nếu danh sách hồ sơ trống
           if (profileController.expertList.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircularProgressIndicator(
-                    color: Colors.green,
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
+                  CircularProgressIndicator(color: Colors.green),
+                  SizedBox(height: 10),
+                  Text(
                     'Đang tải hồ sơ...',
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
@@ -65,12 +63,7 @@ class ExpertPage extends StatelessWidget {
               itemCount: profileController.expertList.length,
               itemBuilder: (context, index) {
                 final expert = profileController.expertList[index];
-                return ProfileCard(
-                  fullName: expert.fullName,
-                  bio: expert.bio,
-                  degree: expert.degree,
-                  profilePictureUrl: expert.profilePictureUrl,
-                );
+                return ProfileCard(expertData: expert);
               },
             );
           }

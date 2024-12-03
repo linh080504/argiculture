@@ -23,7 +23,6 @@ class _CommentListState extends State<CommentList> {
   String? postUser;
   String? postTitle;
   XFile? _imageFile;
-  List<Map<String, dynamic>> comments = [];
 
   @override
   void initState() {
@@ -106,15 +105,19 @@ class _CommentListState extends State<CommentList> {
                   );
                   return;
                 }
+
                 try {
                   await commentController.addComment(
-                      widget.postId, userName!, commentText);
+                      widget.postId, commentText, _imageFile);
                   _titlecmtController.clear();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Đã thêm bình luận thành công!')),
                   );
                   commentController.fetchComments(widget.postId);
-                } catch (e) {
+                } catch (e, stackTrace) {
+                  print('Error adding comment: $e');
+                  print(stackTrace);
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Row(
@@ -123,7 +126,7 @@ class _CommentListState extends State<CommentList> {
                           SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              "Lỗi khi thêm bình luận, vui lòng thử lại.",
+                              "Lỗi khi thêm bình luận: $e",
                               style: TextStyle(color: Colors.white),
                             ),
                           ),
@@ -134,6 +137,7 @@ class _CommentListState extends State<CommentList> {
                   );
                 }
               },
+
             ),
           ],
         ),
@@ -155,7 +159,6 @@ class _CommentListState extends State<CommentList> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thẻ bài viết
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: PostCard(
@@ -170,7 +173,6 @@ class _CommentListState extends State<CommentList> {
               ),
             ),
             const Divider(thickness: 1),
-            // Tiêu đề danh sách bình luận
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Text(
@@ -178,17 +180,21 @@ class _CommentListState extends State<CommentList> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
-            // Danh sách bình luận
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: commentController.comments.length,
-              itemBuilder: (context, index) {
-                final comment = commentController.comments[index];
-                return CommentCard(comment: comment);
-              },
-            ),
-            // Ô nhập bình luận
+            Obx(() {
+              if (commentController.comments.isEmpty) {
+                return Center(child: Text('Chưa có bình luận.'));
+              } else {
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: commentController.comments.length,
+                  itemBuilder: (context, index) {
+                    final comment = commentController.comments[index];
+                    return CommentCard(comment: comment);
+                  },
+                );
+              }
+            }),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: commentInputField,

@@ -47,7 +47,7 @@ class _HomeState extends State<Home> {
       HomePage(), // Tab Home
       CommunityPage(),// Tab Favorite
       ExpertPage(), // Tab Cart
-     ProfilePage(), // Tab Profile
+      ProfilePage(), // Tab Profile
     ];
   }
   bool shouldShowAppBar(int index) {
@@ -59,31 +59,31 @@ class _HomeState extends State<Home> {
     _loadUserName(); // Tải tên tài khoản khi khởi tạo màn hình
   }
 
-
-  // Hàm lấy tên tài khoản từ SharedPreferences
   void _loadUserName() async {
-    // Lấy user hiện tại từ Firebase Authentication
     User? currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser != null) {
       String userEmail = currentUser.email ?? '';
 
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users') // Tên collection của bạn
-          .doc(userEmail) // Sử dụng email làm documentId
+          .collection('users')
+          .doc(userEmail)
           .get();
 
       if (userDoc.exists) {
-        String? fullname = userDoc['fullname']; // Lấy fullname từ Firestore
-        print('fullname: $fullname');
+        String? fullName = userDoc['fullName'];
+        String? profilePicture = userDoc['profilePicture'];
+
         setState(() {
-          userName = fullname ?? 'Người dùng'; // Nếu không có fullname, hiển thị "Người dùng"
+          userName = fullName ?? 'Người dùng';
+          userProfilePicture = profilePicture ?? '';
         });
       } else {
         print('User document not found');
       }
     }
   }
+
   // Hàm xử lý đăng xuất
   void _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -178,13 +178,10 @@ class _HomeState extends State<Home> {
                     children: [
                       CircleAvatar(
                         radius: 28.0,
-                        backgroundImage: _avatarImage != null
-                            ? FileImage(_avatarImage!)
-                            : userProfilePicture != null
+                        backgroundImage: userProfilePicture != null && userProfilePicture!.isNotEmpty
                             ? NetworkImage(userProfilePicture!)
-                        as ImageProvider
-                            : NetworkImage(
-                            'https://www.w3schools.com/w3images/avatar2.png'),
+                            : const NetworkImage('https://www.w3schools.com/w3images/avatar2.png'),  // Ảnh mặc định nếu không có ảnh đại diện
+                        backgroundColor: Colors.grey[200],
                       ),
                       Positioned(
                         top: 30,
@@ -301,7 +298,6 @@ class _HomeState extends State<Home> {
               leading: Icon(Icons.share),
               title: Text('Chia sẻ ứng dụng'),
               onTap: () async {
-                // Hiển thị danh sách các ứng dụng có thể chia sẻ
                 await Share.share('Bạn muốn chia sẻ ứng dụng nào?'
                 );
               },
@@ -311,8 +307,8 @@ class _HomeState extends State<Home> {
               leading: Icon(Icons.outlet_sharp),
               title: Text('Đăng xuất'),
               onTap: () {
-                Navigator.pop(context); // Đóng menu
-                _logout(); // Gọi hàm đăng xuất
+                Navigator.pop(context);
+                _logout();
               },
             ),
           ],
@@ -344,15 +340,15 @@ class _HomeState extends State<Home> {
           ),
           BottomNavigationBarItem(
             icon: Padding(
-              padding: const EdgeInsets.only(right: 50), // Điều chỉnh khoảng cách sang trái
-              child: Icon(iconList[1], size: 30), // Kích thước biểu tượng Favorite
+              padding: const EdgeInsets.only(right: 50),
+              child: Icon(iconList[1], size: 30),
             ),
             label: 'Cộng đồng',
           ),
           BottomNavigationBarItem(
             icon: Padding(
-              padding: const EdgeInsets.only(left: 8.0), // Điều chỉnh khoảng cách sang trái
-              child: Icon(iconList[2], size: 30), // Kích thước biểu tượng Favorite
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Icon(iconList[2], size: 30),
             ),
             label: 'Chuyên gia',
           ),

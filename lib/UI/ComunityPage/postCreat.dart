@@ -3,7 +3,9 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:weather/UI/ComunityPage/PostController.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class PostCreate extends StatefulWidget {
   const PostCreate({super.key});
@@ -14,43 +16,56 @@ class PostCreate extends StatefulWidget {
 
 class _PostCreateState extends State<PostCreate> {
   final TextEditingController _titleController = TextEditingController();
-  final postController = Get.find<PostController>();
-  List<XFile>? _imageFiles = [];
-  String? userName;
+  final postController = Get.find<PostController>(); // Create an instance of PostController
+  List<XFile> _imageFiles = []; // Non-nullable list initialized
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserName();
-  }
-
-  void _loadUserName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? fullname = prefs.getString('fullname');
-    setState(() {
-      userName = fullname ?? 'Người dùng';
-    });
-  }
-
+  // Pick images from gallery
   Future<void> pickImages() async {
     final imagePicker = ImagePicker();
     final pickedImages = await imagePicker.pickMultiImage();
+
     setState(() {
-      if (pickedImages.isNotEmpty) {
+      if (pickedImages != null && pickedImages.isNotEmpty) {
         _imageFiles = pickedImages;
+      } else {
+        // Ensure _imageFiles remains an empty list if no images are picked
+        _imageFiles.clear();
       }
     });
   }
 
+  // Add post to Firestore
   Future<void> addPost() async {
-    if (_titleController.text.isNotEmpty) {
-      postController.title.value = _titleController.text;
-      await postController.addPost(userName!, images: _imageFiles);
-      Navigator.pop(context);
+    if (_titleController.text.isNotEmpty && _imageFiles.isNotEmpty) {
+      List<XFile> selectedImages = _imageFiles; // Non-nullable list
+
+      try {
+        await postController.addPost(
+          title: _titleController.text,
+          images: selectedImages,
+        );
+        _titleController.clear();
+        _imageFiles.clear(); // Clear images after posting
+
+        print("Post created successfully!");
+        Navigator.pop(context);
+        postController.fetchPosts();
+      } catch (e) {
+        print("Error adding post: $e");
+        Get.snackbar(
+          "Error",
+          "Có lỗi xảy ra khi đăng bài viết!",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.redAccent,
+          colorText: Colors.white,
+          icon: const Icon(Icons.error, color: Colors.white),
+        );
+      }
     } else {
+      // Ensure title and images are not empty before posting
       Get.snackbar(
         "Thông báo",
-        "Vui lòng nhập tiêu đề cho bài viết",
+        "Vui lòng nhập tiêu đề và chọn hình ảnh.",
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
@@ -87,7 +102,7 @@ class _PostCreateState extends State<PostCreate> {
             IconButton(
               icon: const Icon(Icons.add_a_photo, color: Colors.blue),
               onPressed: () {
-                pickImages(); // Chọn nhiều ảnh từ thư viện
+                pickImages();
               },
             ),
           ],
@@ -134,12 +149,12 @@ class _PostCreateState extends State<PostCreate> {
           children: [
             titleField,
             const SizedBox(height: 20),
-            _imageFiles != null && _imageFiles!.isNotEmpty
+            _imageFiles.isNotEmpty
                 ? SizedBox(
               height: 250,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: _imageFiles!.length,
+                itemCount: _imageFiles.length,
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -156,7 +171,7 @@ class _PostCreateState extends State<PostCreate> {
                           ),
                         ],
                         image: DecorationImage(
-                          image: FileImage(File(_imageFiles![index].path)),
+                          image: FileImage(File(_imageFiles[index].path)),
                           fit: BoxFit.cover,
                         ),
                       ),
