@@ -101,9 +101,9 @@ class _ChatPageState extends State<ChatPage> {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                       child: Align(
-                        alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft, // Người dùng nằm bên phải
+                        alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
                         child: Card(
-                          color: isCurrentUser ? Colors.blue[500] : Colors.green[100], // Màu tin nhắn
+                          color: isCurrentUser ? Colors.blue[500] : Colors.white10,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),

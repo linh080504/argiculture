@@ -59,8 +59,8 @@ class CardChat extends StatelessWidget {
         subtitle: Text(
           lastMessage.isNotEmpty ? lastMessage : 'No messages yet.',
           style: TextStyle(
-            fontWeight: unread ? FontWeight.bold : FontWeight.normal, // Làm in đậm nếu chưa đọc
-            color: unread ? Colors.blueAccent : Colors.black54, // Làm nổi bật nếu chưa đọc
+            fontWeight: unread ? FontWeight.bold : FontWeight.normal,
+            color: unread ? Colors.blueAccent : Colors.black54,
           ),
         ),
         onTap: () {
