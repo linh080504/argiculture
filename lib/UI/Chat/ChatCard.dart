@@ -34,6 +34,7 @@ class CardChat extends StatelessWidget {
     final fullName = isExpert ? userFullName : expertFullName;
 
     return Card(
+      color: Colors.white,
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),

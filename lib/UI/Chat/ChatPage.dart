@@ -36,10 +36,14 @@ class _ChatPageState extends State<ChatPage> {
     _loadChatPartnerInfo();
   }
   Future<void> _loadChatPartnerInfo() async {
-    String chatPartnerId = widget.currentUserId;
+    List<String> emails = widget.conversationId.split('-');
+    String chatPartnerEmail = emails.firstWhere(
+          (email) => email != widget.currentUserId,
+    );
+
     DocumentSnapshot userDoc = await FirebaseFirestore.instance
         .collection('users')
-        .doc(chatPartnerId)
+        .doc(chatPartnerEmail)
         .get();
 
     if (userDoc.exists) {
@@ -49,6 +53,8 @@ class _ChatPageState extends State<ChatPage> {
       });
     }
   }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
