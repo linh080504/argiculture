@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:weather/Components/color.dart';
 import 'package:weather/UI/home.dart';
 import 'package:weather/Expert/ProfileCard.dart';
 import 'package:weather/Expert/ProfileController.dart';
@@ -16,11 +17,11 @@ class ExpertPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white, // Màu nền trắng
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFF4CAF50), // Màu xanh lá cây tươi sáng
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: Colors.black, size: 30),
+          icon: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 30),
           onPressed: () {
             Navigator.push(
               context,
@@ -30,16 +31,18 @@ class ExpertPage extends StatelessWidget {
             );
           },
         ),
-        title: Center(
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Text(
-            'Chuyên Gia Nông Nghiệp       ',
+            'Chuyên Gia Nông Nghiệp',
             style: TextStyle(
-              color: Colors.black,
+              color: Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 24,
             ),
           ),
         ),
+        centerTitle: true, // Tiêu đề nằm chính giữa
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -49,11 +52,15 @@ class ExpertPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(color: Colors.green),
-                  SizedBox(height: 10),
+                  CircularProgressIndicator(color: Color(0xFF4CAF50)), // Màu xanh lá cho vòng xoay
+                  SizedBox(height: 20),
                   Text(
                     'Đang tải hồ sơ...',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -63,7 +70,10 @@ class ExpertPage extends StatelessWidget {
               itemCount: profileController.expertList.length,
               itemBuilder: (context, index) {
                 final expert = profileController.expertList[index];
-                return ProfileCard(expertData: expert);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: ProfileCard(expertData: expert),
+                );
               },
             );
           }
