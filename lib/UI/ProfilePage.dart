@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:weather/Components/color.dart';
 import 'package:weather/UI/forgot_password.dart';
 import 'package:weather/UI/login.dart';
 import 'package:image_picker/image_picker.dart';
@@ -153,6 +154,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: primaryColor,  // Chọn màu sắc mới cho app bar
         title: Row(
           children: [
             Stack(
@@ -161,14 +163,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   radius: 28.0,
                   backgroundImage: userProfilePicture != null && userProfilePicture!.isNotEmpty
                       ? NetworkImage(userProfilePicture!)
-                      : const NetworkImage('https://www.w3schools.com/w3images/avatar2.png'),  // Ảnh mặc định nếu không có ảnh đại diện
+                      : const NetworkImage('https://www.w3schools.com/w3images/avatar2.png'), // Ảnh mặc định nếu không có ảnh đại diện
                   backgroundColor: Colors.grey[200],
                 ),
                 Positioned(
                   top: 30,
                   left: 30,
                   child: IconButton(
-                    icon: Icon(Icons.edit),
+                    icon: Icon(Icons.edit, color: Colors.white),
                     onPressed: _pickAvatarImage,
                   ),
                 ),
@@ -178,8 +180,9 @@ class _ProfilePageState extends State<ProfilePage> {
             Text(
               '$userName',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: Colors.white, // Màu chữ
               ),
             ),
           ],
@@ -191,11 +194,19 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              // Tiểu sử
               TextField(
                 controller: _bioController,
                 maxLines: 2,
                 decoration: InputDecoration(
                   hintText: 'Tiểu sử',
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(Icons.edit_note),
                     onPressed: () {
@@ -205,11 +216,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       }
                     },
                   ),
-                  ),
+                ),
               ),
+              SizedBox(height: 20),
+              // Đổi tên
               ListTile(
-                leading: Icon(Icons.account_circle_rounded),
-                title: Text('Đổi tên'),
+                leading: Icon(Icons.account_circle_rounded, color: Colors.deepPurple),
+                title: Text('Đổi tên', style: TextStyle(fontSize: 16, color: Colors.black)),
                 onTap: () {
                   showDialog(
                     context: context,
@@ -244,9 +257,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   );
                 },
               ),
+              // Đổi mật khẩu
               ListTile(
-                leading: Icon(Icons.password),
-                title: Text('Đổi mật khẩu'),
+                leading: Icon(Icons.password, color: Colors.deepPurple),
+                title: Text('Đổi mật khẩu', style: TextStyle(fontSize: 16)),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -256,14 +270,16 @@ class _ProfilePageState extends State<ProfilePage> {
                   );
                 },
               ),
+              // Đăng xuất
               ListTile(
-                leading: Icon(Icons.outlet_sharp),
-                title: Text('Đăng xuất'),
+                leading: Icon(Icons.exit_to_app, color: Colors.deepPurple),
+                title: Text('Đăng xuất', style: TextStyle(fontSize: 16)),
                 onTap: _logout,
               ),
+              // Xóa tài khoản
               ListTile(
-                leading: Icon(Icons.delete_outline),
-                title: Text('Xóa tài khoản'),
+                leading: Icon(Icons.delete_outline, color: Colors.red),
+                title: Text('Xóa tài khoản', style: TextStyle(fontSize: 16, color: Colors.red)),
                 onTap: () {
                   showDialog(
                     context: context,
@@ -299,4 +315,5 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
 }

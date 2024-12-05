@@ -53,4 +53,15 @@ class DrugService {
     }
   }
 
+  Future<String> getImageUrl(String path) async {
+    try {
+      final ref = FirebaseStorage.instance.ref().child(path);
+      String downloadUrl = await ref.getDownloadURL();
+      return downloadUrl;  // Trả về URL chính thức
+    } catch (e) {
+      print('Error fetching image URL: $e');
+      return '';  // Trả về chuỗi rỗng nếu có lỗi
+    }
+  }
+
 }

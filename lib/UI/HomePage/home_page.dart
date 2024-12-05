@@ -6,7 +6,10 @@ import 'package:http/http.dart' as http;
 import 'package:weather/Components/color.dart';
 import 'package:weather/UI/DrugsPage/drug_look_page.dart';
 import 'package:weather/UI/DrugsPage/drug_lookup_card.dart';
+import 'package:weather/UI/HomePage/bao.dart';
+import 'package:weather/UI/HomePage/crop.dart';
 import 'package:weather/UI/HomePage/feature_card.dart';
+import 'package:weather/UI/HomePage/scan_page.dart';
 import 'package:weather/UI/HomePage/weather_detail_page.dart';
 import 'package:weather/UI/PlantPage/MyPlant.dart';
 
@@ -378,9 +381,46 @@ class _HomePageState extends State<HomePage> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  FeatureCard(icon: Icons.local_florist, label: "Bác sĩ cây AI"),
-                  FeatureCard(icon: Icons.shield, label: "Bảo hiểm lượng mưa"),
-                  FeatureCard(icon: Icons.qr_code, label: "Truy xuất nguồn gốc"),
+                  GestureDetector(
+                    onTap: () {
+                      // Navigate to ScanPage when Bác sĩ cây AI card is tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ScanPage()),
+                      );
+                    },
+                    child: FeatureCard(
+                      icon: Icons.local_florist,
+                      label: "Bác sĩ cây AI",
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      // Navigate to BaoPage when Theo dõi bão card is tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const BaoPage()), // Thay thế với BaoPage của bạn
+                      );
+                    },
+                    child: FeatureCard(
+                      icon: Icons.shield,
+                      label: "Theo dõi bão",
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      // Navigate to CropPage when Khuyến nghị cây trồng card is tapped
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CropPage()), // Thay thế với CropPage của bạn
+                      );
+                    },
+                    child: FeatureCard(
+                      icon: Icons.qr_code,
+                      label: "Khuyến nghị cây trồng",
+                    ),
+                  ),
+
                   FeatureCard(icon: Icons.directions_bus, label: "Chuyến xe nông dân"),
                 ],
               ),

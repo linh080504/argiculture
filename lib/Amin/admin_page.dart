@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weather/Amin/dashboard_screen.dart';
 import 'package:weather/Amin/disease_predicttion_page.dart';
+import 'package:weather/Amin/plants/crop_controller.dart';
 import 'package:weather/Components/color.dart';
 
 // Import các trang quản lý
@@ -20,12 +21,14 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   late Widget _currentBody;
+  late CropController cropController; // Khai báo controller
   String _selectedRoute = '/dashboard';
 
   @override
   void initState() {
     super.initState();
     _currentBody = DashboardScreen();
+    cropController = CropController(); // Khởi tạo CropController
   }
 
   void _onMenuItemSelected(AdminMenuItem item) {
@@ -40,7 +43,7 @@ class _AdminPageState extends State<AdminPage> {
       } else if (item.route == '/users') {
         _currentBody = UsersManagementPage();
       } else if (item.route == '/crops') {
-        _currentBody = CropsManagementPage();
+        _currentBody = CropsManagementPage(cropController: cropController);
       } else if (item.route == '/disease-prediction') {
         _currentBody = DiseasePredictionPage();
       } else if (item.route == '/statistics') {

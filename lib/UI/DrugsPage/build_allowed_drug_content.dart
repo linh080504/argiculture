@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:diacritic/diacritic.dart';
+import 'package:weather/UI/DrugsPage/drug_detail_page.dart';
 
 class AllowedDrugContent extends StatefulWidget {
   @override
@@ -107,7 +108,7 @@ class _AllowedDrugContentState extends State<AllowedDrugContent> {
                                         child: Column(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                           Icon(Icons.eco, size: 40, color: Colors.green),
+                                            Icon(Icons.eco, size: 40, color: Colors.green),
                                             SizedBox(height: 8),
                                             Text(
                                               'Cây trồng',
@@ -195,51 +196,62 @@ class _AllowedDrugContentState extends State<AllowedDrugContent> {
 
   // Hàm build Card thuốc
   Widget _buildInfoCard(Map<String, dynamic> drugInfo) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SizedBox(
-          height: 250, // Đặt chiều cao cố định (có thể điều chỉnh)
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Image.network(
-                  drugInfo["imageUrl"] ?? 'https://example.com/default_image.png', // Sử dụng ảnh mặc định nếu không có
-                  height: 110,
-                  fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () {
+        // Điều hướng tới trang chi tiết khi nhấn vào Card
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DrugDetailPage(drugInfo: drugInfo), // Chuyển dữ liệu thuốc
+          ),
+        );
+      },
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            height: 250, // Đặt chiều cao cố định (có thể điều chỉnh)
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Image.network(
+                    drugInfo["imageUrl"] ?? 'https://example.com/default_image.png', // Sử dụng ảnh mặc định nếu không có
+                    height: 110,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 8),
-              Text(
-                drugInfo["name"] ?? 'Tên thuốc không có',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Đơn vị đăng ký thuốc: ',
-                style: const TextStyle(fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                drugInfo['company'] ?? 'Công ty không có',
-                style: const TextStyle(fontSize: 14, color: Colors.green),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                drugInfo["type"] ?? 'Loại thuốc không có',
-                style: const TextStyle(fontSize: 14, color: Colors.blue),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  drugInfo["name"] ?? 'Tên thuốc không có',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Đơn vị đăng ký thuốc: ',
+                  style: const TextStyle(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  drugInfo['company'] ?? 'Công ty không có',
+                  style: const TextStyle(fontSize: 14, color: Colors.green),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  drugInfo["type"] ?? 'Loại thuốc không có',
+                  style: const TextStyle(fontSize: 14, color: Colors.blue),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),
