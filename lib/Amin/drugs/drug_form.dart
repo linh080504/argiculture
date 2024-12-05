@@ -67,8 +67,10 @@ class _DrugFormState extends State<DrugForm> {
 
           if (_webImageBytes != null) {
             setState(() {
-              _imageUrl = null;
+              _imageUrl = null; // Reset image URL to null while uploading
             });
+
+            // Upload the image to Firebase
             _imageUrl = await _drugService.uploadImage(_webImageBytes!, fileName);
             if (_imageUrl!.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Có lỗi xảy ra khi tải lên ảnh.')));
@@ -107,12 +109,17 @@ class _DrugFormState extends State<DrugForm> {
   }
 
   void _submitForm() async {
-    if (_selectedImage != null) {
-      try {
-        final bytes = await _selectedImage!.readAsBytes();
-        _imageUrl = await _drugService.uploadImage(bytes, _selectedImage!.path.split('/').last);
-      } catch (e) {
-        print("Lỗi tải ảnh: $e");
+    if (_selectedImage != null || _webImageBytes != null) {
+      // Kiểm tra và upload ảnh nếu có
+      if (_selectedImage != null) {
+        try {
+          final bytes = await _selectedImage!.readAsBytes();
+          _imageUrl = await _drugService.uploadImage(bytes, _selectedImage!.path.split('/').last);
+        } catch (e) {
+          print("Lỗi tải ảnh: $e");
+        }
+      } else if (_webImageBytes != null) {
+        _imageUrl = await _drugService.uploadImage(_webImageBytes!, 'web_image');
       }
     }
 
@@ -126,7 +133,7 @@ class _DrugFormState extends State<DrugForm> {
       'usage': _usageController.text,
       'warnings': _warningsController.text,
       'safetyRecommendations': _safetyRecommendationsController.text,
-      'imageUrl': _imageUrl ?? '',
+      'imageUrl': _imageUrl ?? '', // Tránh để trống trường này
     };
 
     try {
@@ -140,6 +147,7 @@ class _DrugFormState extends State<DrugForm> {
       print("Lỗi thêm hoặc cập nhật thuốc: $e");
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

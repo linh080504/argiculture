@@ -31,18 +31,26 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
     List<UserRecord> users = [];
     try {
       final userCollection = await FirebaseFirestore.instance.collection('users').get();
-      for (var doc in userCollection.docs) {
-        users.add(UserRecord(
-          uid: doc.id,
-          email: doc['email'],
-          fullname: doc['fullname'],
-        ));
+      if (userCollection.docs.isNotEmpty) {
+        for (var doc in userCollection.docs) {
+          // Kiểm tra xem trường 'role' có tồn tại hay không
+          String role = doc.data().containsKey('role') ? doc['role'] : 'Chưa có';
+
+          users.add(UserRecord(
+            uid: doc.id,
+            email: doc['email'],
+            fullname: doc['fullname'],
+            role: role, // Sử dụng giá trị 'role' nếu có, nếu không sẽ là 'Chưa có'
+          ));
+        }
+      } else {
+        print('Không có người dùng nào trong Firestore.');
       }
       setState(() {
         _firestoreUsers = users;
       });
     } catch (e) {
-      print('Error fetching users: $e');
+      print('Lỗi khi lấy người dùng từ Firestore: $e');
     }
   }
 
@@ -50,15 +58,24 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quản lý người dùng', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Quản lý người dùng',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.blueAccent,
+        elevation: 5,
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: Colors.white),
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: UserSearchDelegate(_searchController, _searchQuery, _updateSearchQuery),
+                delegate: UserSearchDelegate(
+                    _searchController, _searchQuery, _updateSearchQuery),
               );
             },
           ),
@@ -71,28 +88,52 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
         itemBuilder: (context, index) {
           final user = _firestoreUsers[index];
           return Card(
-            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            child: ListTile(
-              title: Text(user.email, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('Tên đầy đủ: ${user.fullname}'),
-              trailing: Wrap(
-                spacing: 8,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    onPressed: () {
-                      _editUser(user);
-                    },
+            margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+            elevation: 10,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                tileColor: Colors.grey[50],
+                title: Text(
+                  user.email,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.blueAccent,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      _deleteUser(user);
-                    },
-                  ),
-                ],
+                ),
+                subtitle: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tên: ${user.fullname}',
+                      style: const TextStyle(fontSize: 14, color: Colors.black54),
+                    ),
+                    Text(
+                      'Vai trò: ${user.role}',
+                      style: const TextStyle(fontSize: 14, color: Colors.black54),
+                    ),
+                  ],
+                ),
+                trailing: Wrap(
+                  spacing: 12,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () {
+                        _editUser(user);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        _deleteUser(user);
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -106,10 +147,14 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
     );
   }
 
+
+
   Future<void> _addUser() async {
     String email = '';
     String fullname = '';
     String password = '';
+    String re_password = '';
+    String role = 'User'; // Mặc định là 'User'
 
     showDialog(
       context: context,
@@ -124,11 +169,37 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
               _buildTextField('Tên đầy đủ', onChanged: (value) => fullname = value),
               const SizedBox(height: 10),
               _buildTextField('Mật khẩu', obscureText: true, onChanged: (value) => password = value),
+              const SizedBox(height: 10),
+              _buildTextField('Nhập lại mật khẩu', obscureText: true, onChanged: (value) => re_password = value),
+              const SizedBox(height: 10),
+              // DropdownButton để chọn vai trò
+              DropdownButton<String>(
+                value: role,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    role = newValue!;
+                  });
+                },
+                items: <String>['User', 'Expert']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                hint: const Text('Chọn vai trò'),
+              ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () async {
+                if (password != re_password) {
+                  // Xử lý nếu mật khẩu và mật khẩu nhập lại không khớp
+                  print('Mật khẩu không khớp');
+                  return;
+                }
+
                 try {
                   UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
                     email: email,
@@ -137,6 +208,7 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
                   await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
                     'email': email,
                     'fullname': fullname,
+                    'role': role, // Lưu vai trò vào Firestore
                   });
                   Navigator.of(context).pop();
                   _getFirestoreUsers();
@@ -205,13 +277,21 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
 
   Future<void> _deleteUser(UserRecord user) async {
     try {
+      // Xóa người dùng từ Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
-      await _auth.currentUser!.delete();
+
+      // Xóa người dùng từ Firebase Authentication
+      if (_auth.currentUser != null) {
+        await _auth.currentUser!.delete();
+      }
+
+      // Cập nhật lại danh sách người dùng Firestore
       _getFirestoreUsers();
     } catch (e) {
       print('Lỗi khi xóa người dùng: $e');
     }
   }
+
 
   void _updateSearchQuery(String query) {
     setState(() {
@@ -233,18 +313,22 @@ class _UsersManagementPageState extends State<UsersManagementPage> {
     );
   }
 }
-
 class UserRecord {
   final String uid;
   final String email;
   final String fullname;
+  final String role;
+
 
   UserRecord({
     required this.uid,
     required this.email,
     required this.fullname,
+    required this.role,
   });
 }
+
+
 
 class UserSearchDelegate extends SearchDelegate {
   final TextEditingController searchController;
