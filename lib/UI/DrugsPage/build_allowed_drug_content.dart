@@ -206,54 +206,6 @@ class _AllowedDrugContentState extends State<AllowedDrugContent> {
           ),
         );
       },
-<<<<<<< HEAD
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              height: 250, // Đặt chiều cao cố định (có thể điều chỉnh)
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Image.network(
-                      drugInfo["imageUrl"] ?? 'https://example.com/default_image.png', // Sử dụng ảnh mặc định nếu không có
-                      height: 110,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-                  Text(
-                    drugInfo["name"] ?? 'Tên thuốc không có',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Đơn vị đăng ký thuốc: ',
-                    style: const TextStyle(fontSize: 14),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    drugInfo['company'] ?? 'Công ty không có',
-                    style: const TextStyle(fontSize: 14, color: Colors.green),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    drugInfo["type"] ?? 'Loại thuốc không có',
-                    style: const TextStyle(fontSize: 14, color: Colors.blue),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-=======
       child: Card(
         elevation: 4,
         shape: RoundedRectangleBorder(
@@ -299,10 +251,10 @@ class _AllowedDrugContentState extends State<AllowedDrugContent> {
                   textAlign: TextAlign.center,
                 ),
               ],
->>>>>>> b1a6a5d646d14619fa76c9e53c3889aef7c34c75
             ),
           ),
         ),
+      ),
     );
   }
 
