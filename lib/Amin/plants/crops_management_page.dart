@@ -43,46 +43,51 @@ class _CropsManagementPageState extends State<CropsManagementPage> {
 
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                child: ListTile(
-                  leading: crop.imageUrl.isNotEmpty
-                      ? Image.network(crop.imageUrl, width: 50, height: 50, fit: BoxFit.cover)
-                      : Icon(Icons.image, size: 50),
-                  title: Text(crop.name),
-                  subtitle: Text(crop.definition),
-                  onTap: () async {
-                    // Chuyển tới trang sửa cây trồng
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddCropPage(cropController: widget.cropController, crop: crop),
-                      ),
-                    );
-                    // Sau khi trở lại, tải lại danh sách cây trồng
-                    setState(() {
-                      _loadCropsFuture = widget.cropController.loadCrops();
-                    });
-                  },
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      // Xác nhận xóa cây trồng
-                      bool? confirmDelete = await _confirmDelete(context);
-                      if (confirmDelete == true) {
-                        await widget.cropController.deleteCrop(crop.id);
-                        // Tải lại danh sách cây trồng
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: crop.imageUrl.isNotEmpty
+                          ? Image.network(crop.imageUrl, width: 50, height: 50, fit: BoxFit.cover)
+                          : Icon(Icons.image, size: 50),
+                      title: Text(crop.name),
+                      subtitle: Text(crop.definition),
+                      onTap: () async {
+                        // Chuyển tới trang sửa cây trồng
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AddCropPage(cropController: widget.cropController, crop: crop),
+                          ),
+                        );
+                        // Sau khi trở lại, tải lại danh sách cây trồng
                         setState(() {
                           _loadCropsFuture = widget.cropController.loadCrops();
                         });
-                      }
-                    },
-                  ),
+                      },
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          // Xác nhận xóa cây trồng
+                          bool? confirmDelete = await _confirmDelete(context);
+                          if (confirmDelete == true) {
+                            await widget.cropController.deleteCrop(crop.id);
+                            // Tải lại danh sách cây trồng
+                            setState(() {
+                              _loadCropsFuture = widget.cropController.loadCrops();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    _buildCropDetailsSection(crop), // Gọi hàm này để hiển thị chi tiết cây trồng
+                  ],
                 ),
               );
             },
           );
         },
       ),
-        floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () async {
           // Chuyển tới trang thêm cây trồng
@@ -119,6 +124,54 @@ class _CropsManagementPageState extends State<CropsManagementPage> {
           ),
         ],
       ),
+    );
+  }
+
+  // Tạo widget hiển thị thông tin các phần cây trồng (Giới thiệu, Môi trường, Cách trồng...)
+  Widget _buildCropDetailsSection(Crop crop) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Giới thiệu cây trồng
+        ExpansionTile(
+          title: Text('Giới thiệu cây trồng', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          children: [
+            ListTile(
+              title: Text(crop.introduction ?? 'Không có thông tin'),
+            ),
+          ],
+        ),
+
+        // Môi trường cây trồng
+        ExpansionTile(
+          title: Text('Môi trường cây trồng', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          children: [
+            ListTile(
+              title: Text(crop.environment ?? 'Không có thông tin'),
+            ),
+          ],
+        ),
+
+        // Cách nhân giống cây trồng
+        ExpansionTile(
+          title: Text('Cách nhân giống cây trồng', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          children: [
+            ListTile(
+              title: Text(crop.propagation ?? 'Không có thông tin'),
+            ),
+          ],
+        ),
+
+        // Cách trồng cây
+        ExpansionTile(
+          title: Text('Cách trồng cây', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          children: [
+            ListTile(
+              title: Text(crop.planting ?? 'Không có thông tin'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
