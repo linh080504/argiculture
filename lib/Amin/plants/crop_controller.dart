@@ -11,11 +11,13 @@ class CropController extends ChangeNotifier {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // Thêm cây trồng vào Firestore
-  // Thêm cây trồng vào Firestore
   Future<void> addCrop(Crop crop, Map<String, List<String>> stepImages) async {
     try {
-      // Lưu cây trồng vào Firestore (không lưu imageFile trực tiếp)
-      DocumentReference cropRef = await _firestore.collection('crops').add({
+      // Lưu cây trồng vào Firestore với ID theo timestamp
+      String timestampId = crop.id;  // ID đã được tạo từ bên ngoài
+
+      await _firestore.collection('crops').doc(timestampId).set({
+        'id' : timestampId,
         'name': crop.name,
         'definition': crop.definition,
         'imageUrl': crop.imageUrl,
@@ -29,11 +31,14 @@ class CropController extends ChangeNotifier {
         'plantingSteps': crop.plantingSteps,
       });
 
+      // Cập nhật lại crop.id sau khi thêm thành công
+      crop.id = timestampId;
+
       // Lưu URL ảnh cho từng bước vào Firestore (sub-collections)
       for (var section in stepImages.keys) {
         for (var url in stepImages[section]!) {
           // Lưu URL ảnh vào sub-collection của từng bước
-          await cropRef.collection(section).add({
+          await _firestore.collection('crops').doc(timestampId).collection(section).add({
             'imageUrl': url,
           });
         }
