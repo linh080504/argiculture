@@ -18,8 +18,8 @@ class AddCropPage extends StatefulWidget {
 
 class _AddCropPageState extends State<AddCropPage> {
   final _formKey = GlobalKey<FormState>();
-  late String name;
-  late String definition;
+  String name = ''; // Khởi tạo giá trị mặc định cho name
+  String definition = ''; // Khởi tạo giá trị mặc định cho definition
 
   // Biến lưu trữ ảnh cây trồng sau định nghĩa
   File? cropImage;
@@ -88,7 +88,7 @@ class _AddCropPageState extends State<AddCropPage> {
 
       // Tạo đối tượng Crop mới với các tham số bắt buộc
       final crop = Crop(
-        id: DateTime.now().toString(),
+        id: DateTime.now().millisecondsSinceEpoch.toString(),  // Sử dụng mili giây
         name: name,
         definition: definition,
         imageUrl: '', // Để trống, sẽ cập nhật sau khi tải lên ảnh
