@@ -4,16 +4,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 class ChatController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Gửi tin nhắn (có thể có cả ảnh)
   Future<void> sendMessage({
     required String conversationId,
     required String message,
     required String senderId,
+    String? imageUrl, // Thêm tham số imageUrl cho hình ảnh
   }) async {
-    if (message.trim().isEmpty) return;
+    if (message.trim().isEmpty && imageUrl == null) return; // Kiểm tra nếu cả tin nhắn và ảnh đều rỗng
 
     final timestamp = FieldValue.serverTimestamp();
 
     try {
+      // Gửi tin nhắn (có thể có cả hình ảnh)
       await _firestore
           .collection('conversations')
           .doc(conversationId)
@@ -23,8 +26,10 @@ class ChatController {
         'senderId': senderId,
         'timestamp': timestamp,
         'unread': true,
+        'imageUrl': imageUrl ?? '', // Lưu URL hình ảnh nếu có, nếu không thì là chuỗi rỗng
       });
 
+      // Cập nhật tin nhắn cuối cùng của cuộc trò chuyện
       await _firestore.collection('conversations').doc(conversationId).update({
         'lastMessage': message,
         'lastTimestamp': timestamp,
@@ -34,6 +39,7 @@ class ChatController {
     }
   }
 
+  // Lấy danh sách cuộc trò chuyện (dựa trên id của chuyên gia)
   Stream<QuerySnapshot> getConversations(String expertId) {
     return _firestore
         .collection('conversations')
@@ -42,6 +48,7 @@ class ChatController {
         .snapshots();
   }
 
+  // Tạo cuộc trò chuyện mới
   Future<void> createConversation({
     required String userId,
     required String expertId,
@@ -71,6 +78,7 @@ class ChatController {
     }
   }
 
+  // Lấy các tin nhắn của một cuộc trò chuyện
   Stream<QuerySnapshot> getMessages(String conversationId) {
     return _firestore
         .collection('conversations')
@@ -80,6 +88,7 @@ class ChatController {
         .snapshots();
   }
 
+  // Đánh dấu tất cả tin nhắn là đã đọc
   Future<void> markMessagesAsRead(String conversationId) async {
     try {
       final messagesSnapshot = await _firestore

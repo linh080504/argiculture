@@ -12,6 +12,7 @@ import 'package:weather/UI/home.dart';
 import 'package:weather/UI/signup.dart';
 import 'package:weather/Expert/homeExpert.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:weather/Expert/CreateProFileExpert.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -103,31 +104,54 @@ class _SignInPageState extends State<SignInPage> {
 
       if (user != null) {
         final firestore = FirebaseFirestore.instance;
+
+        // Sử dụng email làm document ID
         DocumentSnapshot userDoc = await firestore.collection('users').doc(email).get();
 
         if (userDoc.exists) {
           String roleFromFirestore = userDoc['role'] ?? '';
+
+          // Kiểm tra vai trò
           if (roleFromFirestore != selectedRole) {
-            // Nếu vai trò không khớp, thông báo lỗi
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Role mismatch. Please check your role.")),
             );
             return null;
           }
+
+          // Lưu thông tin vào SharedPreferences
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setBool('isLoggedIn', true);
-          await prefs.setString('userName', user.displayName ?? email);
+          await prefs.setString('userName', userDoc['fullName'] ?? email);
           await prefs.setString('role', roleFromFirestore);
 
-          if (roleFromFirestore == 'Admin') {
+          if (roleFromFirestore == 'expert') {
+            // Kiểm tra xem "profile" của expert đã tồn tại chưa
+            QuerySnapshot profileSnapshot = await firestore
+                .collection('users')
+                .doc(email)
+                .collection('profile')
+                .get();
+
+            if (profileSnapshot.docs.isEmpty) {
+              // Nếu chưa có profile, chuyển đến trang tạo hồ sơ
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CreateProfilesPage(),
+                ),
+              );
+            } else {
+              // Nếu đã có profile, chuyển đến HomeExpert
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ExpertHome()),
+              );
+            }
+          } else if (roleFromFirestore == 'admin') {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => AdminPage()),
-            );
-          } else if (roleFromFirestore == 'Expert') {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => ExpertHome()),
             );
           } else {
             Navigator.pushReplacement(
@@ -135,7 +159,6 @@ class _SignInPageState extends State<SignInPage> {
               MaterialPageRoute(builder: (context) => Home()),
             );
           }
-
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("No user data found in Firestore.")),
@@ -164,6 +187,7 @@ class _SignInPageState extends State<SignInPage> {
 
     return user;
   }
+
 
   @override
   Widget build(BuildContext context) {

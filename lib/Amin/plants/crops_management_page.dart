@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'crop_controller.dart';
 import 'add_crop_page.dart';
 import 'crop.dart';
+import 'edit_plants.dart';
 
 class CropsManagementPage extends StatefulWidget {
   final CropController cropController;
@@ -20,7 +21,7 @@ class _CropsManagementPageState extends State<CropsManagementPage> {
     super.initState();
     _loadCropsFuture = widget.cropController.loadCrops();
   }
-
+  final CropController cropController = CropController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +57,8 @@ class _CropsManagementPageState extends State<CropsManagementPage> {
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => AddCropPage(cropController: widget.cropController, crop: crop),
+                            builder: (context) => EditCropPage(cropId: crop.id, // Truyền cropId
+                              cropController: cropController),
                           ),
                         );
                         // Sau khi trở lại, tải lại danh sách cây trồng
@@ -111,16 +113,16 @@ class _CropsManagementPageState extends State<CropsManagementPage> {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Xác Nhận Xóa'),
-        content: Text('Bạn có chắc chắn muốn xóa cây trồng này?'),
+        title: Text('Xác Nhận Xóa', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('Bạn có chắc chắn muốn xóa cây trồng này?', style: TextStyle(fontSize: 16)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Hủy'),
+            child: Text('Hủy', style: TextStyle(color: Colors.grey)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Xóa'),
+            child: Text('Xóa', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

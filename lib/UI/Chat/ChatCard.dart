@@ -12,6 +12,8 @@ class CardChat extends StatelessWidget {
   final String userFullName;
   final String expertFullName;
   final bool unread;
+  final String messageType;
+  final String? imageUrl;
 
   CardChat({
     required this.userId,
@@ -24,11 +26,13 @@ class CardChat extends StatelessWidget {
     required this.userFullName,
     required this.expertFullName,
     required this.unread,
+    required this.messageType, // Nhận loại tin nhắn
+    this.imageUrl, // Nhận URL hình ảnh
   });
 
   @override
   Widget build(BuildContext context) {
-
+    // Kiểm tra xem người dùng hiện tại là người dùng hay chuyên gia
     final isExpert = currentUserId == expertId;
     final avatar = isExpert ? userAvatar : expertAvatar;
     final fullName = isExpert ? userFullName : expertFullName;
@@ -56,7 +60,25 @@ class CardChat extends StatelessWidget {
             color: Colors.black87,
           ),
         ),
-        subtitle: Text(
+        subtitle: messageType == 'image' && imageUrl != null// Kiểm tra loại tin nhắn
+            ? GestureDetector(
+          child: Image.network( // Hiển thị hình ảnh nếu loại tin nhắn là hình ảnh
+            imageUrl!,
+            width: 150,
+            height: 150,
+            fit: BoxFit.cover,
+          ),
+          onTap: () {
+            // Tùy chọn để xem hình ảnh lớn hơn khi nhấn vào hình ảnh
+            showDialog(
+              context: context,
+              builder: (context) => Dialog(
+                child: Image.network(imageUrl!),
+              ),
+            );
+          },
+        )
+            : Text(
           lastMessage.isNotEmpty ? lastMessage : 'No messages yet.',
           style: TextStyle(
             fontWeight: unread ? FontWeight.bold : FontWeight.normal,

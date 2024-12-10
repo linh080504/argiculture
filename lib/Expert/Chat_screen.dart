@@ -40,61 +40,57 @@ class ExpertChatList extends StatelessWidget {
             final lastMessage = conversation['lastMessage'];
             final conversationId = conversation['conversationId'];
 
-            return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
-              builder: (context, userSnapshot) {
-                if (userSnapshot.connectionState == ConnectionState.waiting) {
+            // Fetch both user and expert data in parallel
+            return FutureBuilder<Map<String, dynamic>>(
+              future: _fetchUserAndExpertData(userId, currentUserId),
+              builder: (context, userExpertSnapshot) {
+                if (userExpertSnapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 }
 
-                if (userSnapshot.hasError) {
-                  return Center(child: Text('Error: ${userSnapshot.error}'));
+                if (userExpertSnapshot.hasError) {
+                  return Center(child: Text('Error: ${userExpertSnapshot.error}'));
                 }
 
-                if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-                  return Center(child: Text('User not found.'));
+                if (!userExpertSnapshot.hasData) {
+                  return Center(child: Text('Data not found.'));
                 }
 
-                final userFullName = userSnapshot.data!['fullname'] ?? 'User';
+                final userData = userExpertSnapshot.data!['user'];
+                final expertData = userExpertSnapshot.data!['expert'];
 
-                final userAvatar = userSnapshot.data!['profilePicture'] ?? '';
+                final userFullName = userData['fullname'] ?? 'User';
+                final userAvatar = userData['profilePicture'] ?? 'default_user_avatar_url';  // Use default if null
+                final expertFullName = expertData['fullname'] ?? 'Expert';
+                final expertAvatar = expertData['profilePicture'] ?? 'default_expert_avatar_url';  // Use default if null
 
-                return FutureBuilder<DocumentSnapshot>(
-                  future: FirebaseFirestore.instance.collection('users').doc(currentUserId).get(),
-                  builder: (context, expertSnapshot) {
-                    if (expertSnapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    }
+                final conversationData = conversation.data() as Map<String, dynamic>?;
 
-                    if (expertSnapshot.hasError) {
-                      return Center(child: Text('Error: ${expertSnapshot.error}'));
-                    }
+                final unread = conversationData?.containsKey('unread') == true
+                    ? conversationData!['unread'] ?? false
+                    : false;
 
-                    if (!expertSnapshot.hasData || !expertSnapshot.data!.exists) {
-                      return Center(child: Text('Không tìm ra thông tin chuyên gia.'));
-                    }
+                final imageUrl = conversationData?.containsKey('imageUrl') == true
+                    ? conversationData!['imageUrl']
+                    : '';
 
-                    final expertAvatar = expertSnapshot.data!['profilePicture'] ?? '';
-                    final expertFullName = expertSnapshot.data!['fullname'] ?? 'Expert';
+                final messageType = conversationData?.containsKey('messageType') == true
+                    ? conversationData!['messageType']
+                    : 'text';
 
-                    final conversationData = conversation.data() as Map<String, dynamic>?;
-                    final unread = conversationData?.containsKey('unread') == true
-                        ? conversationData!['unread'] ?? false  // Default to false if 'unread' doesn't exist
-                        : false;  // Default to false if conversationData is null or 'unread' is not found
-
-                     return CardChat(
-                      userId: userId,
-                      expertId: currentUserId,
-                      currentUserId: currentUserId,
-                      lastMessage: lastMessage,
-                      conversationId: conversationId,
-                      userAvatar: userAvatar,
-                      expertAvatar: expertAvatar,
-                      userFullName: userFullName,
-                      expertFullName: expertFullName,
-                      unread: unread,
-                    );
-                  },
+                return CardChat(
+                  userId: userId, // ID người dùng
+                  expertId: conversation['expertId'],
+                  currentUserId: currentUserId,
+                  lastMessage: lastMessage,
+                  conversationId: conversationId,
+                  userAvatar: userAvatar,
+                  expertAvatar: expertAvatar,
+                  userFullName: userFullName,
+                  expertFullName: expertFullName,
+                  unread: unread,
+                  messageType: messageType,
+                  imageUrl: imageUrl,
                 );
               },
             );
@@ -102,5 +98,27 @@ class ExpertChatList extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<Map<String, dynamic>> _fetchUserAndExpertData(String userId, String expertId) async {
+    try {
+      // Fetch user and expert data in parallel
+      final userDoc = FirebaseFirestore.instance.collection('users').doc(userId).get();
+      final expertDoc = FirebaseFirestore.instance.collection('users').doc(expertId).get();
+
+      final userSnapshot = await userDoc;
+      final expertSnapshot = await expertDoc;
+
+      if (userSnapshot.exists && expertSnapshot.exists) {
+        return {
+          'user': userSnapshot.data() as Map<String, dynamic>,
+          'expert': expertSnapshot.data() as Map<String, dynamic>,
+        };
+      } else {
+        throw Exception('User or expert data not found');
+      }
+    } catch (e) {
+      throw Exception('Error fetching user and expert data: $e');
+    }
   }
 }

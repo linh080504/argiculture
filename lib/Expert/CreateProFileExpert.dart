@@ -21,7 +21,7 @@ class _CreateProfilesPageState extends State<CreateProfilesPage> {
   final TextEditingController _supportGroupController = TextEditingController(); // Nhóm cây hỗ trợ
   XFile? _profilePic;
   String? userProfilePicture;
-  String? userFullName;
+  String? userFullname;
 
   final _formKey = GlobalKey<FormState>();
   final ProfilesController _profilesController = Get.put(ProfilesController());
@@ -51,11 +51,11 @@ class _CreateProfilesPageState extends State<CreateProfilesPage> {
           .get();
 
       if (userDoc.exists) {
-        String? fullName = userDoc['fullName'];
+        String? fullname = userDoc['fullname'];
         String? profilePicture = userDoc['profilePicture'];
 
         setState(() {
-          userFullName = fullName ?? 'User';
+          userFullname = fullname ?? 'User';
           userProfilePicture = profilePicture ?? 'https://www.w3schools.com/w3images/avatar2.png';  // Ảnh mặc định
         });
       } else {
@@ -92,7 +92,7 @@ class _CreateProfilesPageState extends State<CreateProfilesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tạo thông tin chuyên gia')),
+      appBar: AppBar(title: const Text('Thông tin chuyên gia')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -132,7 +132,7 @@ class _CreateProfilesPageState extends State<CreateProfilesPage> {
               TextFormField(
                 controller: _fullnameController,
                 decoration: const InputDecoration(labelText: 'Họ và Tên'),
-                initialValue: userFullName,  // Gán giá trị fullname từ Firestore
+                initialValue: userFullname,  // Gán giá trị fullname từ Firestore
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Nhập họ và tên';

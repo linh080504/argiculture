@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'package:weather/UI/Chat/ChatController.dart';
 
 class ChatPage extends StatefulWidget {
@@ -23,6 +26,7 @@ class _ChatPageState extends State<ChatPage> {
 
   String? chatPartnerName;
   String? chatPartnerProfilePicture;
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -30,11 +34,13 @@ class _ChatPageState extends State<ChatPage> {
       }
     });
   }
+
   @override
   void initState() {
     super.initState();
     _loadChatPartnerInfo();
   }
+
   Future<void> _loadChatPartnerInfo() async {
     List<String> emails = widget.conversationId.split('-');
     String chatPartnerEmail = emails.firstWhere(
@@ -54,11 +60,43 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
+  Future<void> _sendImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedImage = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      try {
+        // Upload ảnh lên Firebase Storage
+        String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+        Reference storageRef = FirebaseStorage.instance
+            .ref()
+            .child('chat_images')
+            .child('${widget.conversationId}/$fileName');
+
+        await storageRef.putFile(File(pickedImage.path));
+        String imageUrl = await storageRef.getDownloadURL();
+
+        // Gửi URL ảnh dưới dạng tin nhắn
+        await _chatController.sendMessage(
+          conversationId: widget.conversationId,
+          message: '',
+          senderId: widget.currentUserId,
+          imageUrl: imageUrl, // Thêm trường imageUrl
+        );
+
+        _scrollToBottom();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi gửi ảnh: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:Colors.white,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.blueGrey,
         title: Row(
@@ -96,7 +134,11 @@ class _ChatPageState extends State<ChatPage> {
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    final isCurrentUser = message['senderId'] == widget.currentUserId; // Kiểm tra tin nhắn của người dùng hiện tại
+                    final messageData = message.data() as Map<String, dynamic>; // Access the document data
+                    final isCurrentUser = messageData['senderId'] == widget.currentUserId;
+
+                    // Check if the 'imageUrl' field exists and is not empty
+                    final isImageMessage = messageData.containsKey('imageUrl') && messageData['imageUrl'] != null && messageData['imageUrl'].isNotEmpty;
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
@@ -109,8 +151,15 @@ class _ChatPageState extends State<ChatPage> {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(10.0),
-                            child: Text(
-                              message['message'],
+                            child: isImageMessage
+                                ? Image.network(
+                              messageData['imageUrl'],
+                              width: 200,
+                              height: 200,
+                              fit: BoxFit.cover,
+                            )
+                                : Text(
+                              messageData['message'] ?? 'No message content',
                               style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.white,
@@ -125,11 +174,14 @@ class _ChatPageState extends State<ChatPage> {
               },
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
+                IconButton(
+                  icon: Icon(Icons.image, color: Colors.deepPurple[300], size: 30),
+                  onPressed: _sendImage,
+                ),
                 Expanded(
                   child: TextField(
                     controller: _messageController,
@@ -139,16 +191,18 @@ class _ChatPageState extends State<ChatPage> {
                         color: Colors.white,
                         fontSize: 18,
                       ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                       fillColor: Colors.deepPurple[300],
                       filled: true,
                       enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 2), // Màu viền khi chưa focus
+                        borderSide: BorderSide(color: Colors.black, width: 2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.black, width: 2), // Màu viền khi focus
+                        borderSide: BorderSide(color: Colors.black, width: 2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),

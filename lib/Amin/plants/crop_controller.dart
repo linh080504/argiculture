@@ -10,6 +10,19 @@ class CropController extends ChangeNotifier {
   final CropService _cropService = CropService();
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<Crop> getCropById(String cropId) async {
+    try {
+      DocumentSnapshot doc = await _firestore.collection('crops').doc(cropId).get();
+      if (doc.exists) {
+        return Crop.fromJson(doc.data() as Map<String, dynamic>);
+      } else {
+        throw Exception('Cây trồng không tồn tại');
+      }
+    } catch (e) {
+      throw Exception('Lỗi khi lấy cây trồng: $e');
+    }
+  }
   // Thêm cây trồng vào Firestore
   Future<void> addCrop(Crop crop, Map<String, List<String>> stepImages) async {
     try {
@@ -136,29 +149,60 @@ class CropController extends ChangeNotifier {
     }
   }
 
-
-
-
-  // Update crop
-  Future<void> updateCrop(Crop crop, File? imageFile) async {
+// Cập nhật cây trồng trong Firestore
+  Future<void> updateCrop(Crop crop) async {
     try {
-      await _cropService.updateCrop(crop);  // Chỉ truyền crop vào
-      await loadCrops();  // Reload crops after update
+      await _firestore.collection('crops').doc(crop.id).update(crop.toJson());
     } catch (e) {
-      errorMessage = "Failed to update crop: $e";
-      notifyListeners();
+      throw Exception('Lỗi khi cập nhật cây trồng: $e');
     }
   }
 
+  Future<Crop> getCropFromFirestore(String cropId) async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance.collection('crops').doc(cropId).get();
 
-  // Delete crop
+      if (doc.exists) {
+        // Chuyển đổi từ JSON sang đối tượng Crop
+        return Crop.fromJson(doc.data() as Map<String, dynamic>);
+      } else {
+        throw Exception('Crop not found');
+      }
+    } catch (e) {
+      throw Exception('Error fetching crop: $e');
+    }
+  }
   Future<void> deleteCrop(String cropId) async {
     try {
-      await _cropService.deleteCrop(cropId);
-      await loadCrops();  // Reload crops after deletion
+      // Xóa tất cả các sub-collections liên quan đến cây trồng
+      for (var section in ['introduction', 'environment', 'propagation', 'planting']) {
+        var sectionCollection = _firestore.collection('crops').doc(cropId).collection(section);
+        var snapshot = await sectionCollection.get();
+        for (var doc in snapshot.docs) {
+          // Nếu cần, xóa ảnh trong Firebase Storage trước (nếu ảnh lưu trong Firestore có URL)
+          if (doc['imageUrl'] != null) {
+            try {
+              await _storage.refFromURL(doc['imageUrl']).delete();
+            } catch (e) {
+              print("Error deleting image from storage: $e");
+            }
+          }
+          await doc.reference.delete();
+        }
+      }
+
+      // Xóa tài liệu chính của cây trồng
+      await _firestore.collection('crops').doc(cropId).delete();
+
+      // Sau khi xóa, tải lại danh sách cây trồng
+      await loadCrops();
+
+      print('Successfully deleted crop with ID: $cropId');
     } catch (e) {
-      errorMessage = "Failed to delete crop: $e";  // Lưu thông báo lỗi
+      errorMessage = "Failed to delete crop: $e";
+      print("Error deleting crop: $e");
       notifyListeners();
     }
   }
+
 }

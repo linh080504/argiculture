@@ -178,7 +178,7 @@ class _ExpertHomeState extends State<ExpertHome> {
             ListTile(
               leading: Icon(Icons.app_registration, color: Colors.black),
               title: Text(
-                'Tạo hồ sơ',
+                'Hồ sơ',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 18,
